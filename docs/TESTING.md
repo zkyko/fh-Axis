@@ -63,6 +63,85 @@ Before testing, you should have access to:
 
 ---
 
+## Quick Start for Testers
+
+**Welcome!** This guide will help you test the Axis application systematically. Follow these steps to get started:
+
+### Step 1: Install and Launch
+
+1. **Install the Application**
+   - Install the provided executable file
+   - Ensure Git is installed on your system (required for repository operations)
+   - Launch the Axis application
+
+2. **First Launch Verification**
+   - Application should open without errors
+   - Dashboard should be displayed
+   - Sidebar navigation should be visible
+
+### Step 2: Configure Integrations
+
+Before testing features, you'll need to configure integrations in Settings:
+
+1. Navigate to **Settings** (sidebar → TOOLS section)
+2. Configure each integration:
+   - **Azure DevOps**: Organization, Project, and PAT
+   - **BrowserStack Automate**: Credentials (may be pre-configured)
+   - **BrowserStack TM**: Credentials (may be pre-configured)
+   - **Jira**: Base URL, Email, and API Token
+3. Test each connection to verify credentials work
+
+### Step 3: Testing Approach
+
+**Recommended Testing Order:**
+
+1. **Start with Setup & Configuration** (Test Cases 1.1 - 1.8)
+   - Verify app launches correctly
+   - Configure all integrations
+   - Verify settings are saved
+
+2. **Core Functionality** (Workflows 1-5)
+   - View test execution data
+   - Analyze failures
+   - Create Jira bugs
+   - Test repository management
+   - Verify correlations
+
+3. **Integration Testing** (Test Cases 7.1 - 7.5)
+   - Verify all APIs connect successfully
+   - Test database operations
+
+4. **UI/UX and Edge Cases** (Test Cases 8.1 - 10.8)
+   - Test user experience
+   - Verify error handling
+
+### Step 4: Document Your Findings
+
+As you test, use the **Test Execution Checklist** at the end of this document to track your progress. For any issues found:
+
+- Reference the specific test case number
+- Document steps to reproduce
+- Note expected vs. actual results
+- Take screenshots if applicable
+- Report using the format in the "Reporting Issues" section
+
+### Additional Resources
+
+**Documentation Site**: [Link to Docusaurus documentation site - provided separately]
+
+**Key Documentation Topics:**
+- **Architecture**: System design, main/renderer separation, services
+- **Integrations**: BrowserStack Automate, BrowserStack TM, Jira, Azure DevOps API details
+- **Data Model**: Data structures, correlations, workflow metadata
+- **UI Screens**: Screen specifications and layouts
+- **IPC Contract**: Inter-process communication channels
+- **Workflows**: Step-by-step workflow guides (e.g., Jira bug creation)
+- **Troubleshooting**: Common errors and solutions
+
+**Note**: The documentation site provides detailed technical information. This test document focuses on practical testing procedures.
+
+---
+
 ## Setup & Configuration Testing
 
 ### Test Case 1.1: Initial Application Launch
@@ -1649,7 +1728,16 @@ For comprehensive Git testing, prepare:
 
 ## Test Execution Checklist
 
-Use this checklist to track your testing progress:
+Use this checklist to track your testing progress. Mark each item as:
+- ✅ Passed
+- ❌ Failed (report as issue)
+- ⚠️ Blocked
+- ⏭️ Skipped
+- 🔄 In Progress
+
+**Tester Name**: _________________  
+**Testing Date**: _________________  
+**App Version**: _________________
 
 ### Setup & Configuration
 - [ ] Initial application launch
@@ -1746,15 +1834,58 @@ Use this checklist to track your testing progress:
 
 ### Reporting Issues
 
-When reporting issues found during testing, include:
+When you encounter bugs or issues during testing, please report them using the following format:
 
-1. **Test Case Number**: Reference the specific test case
-2. **Steps to Reproduce**: Detailed steps that led to the issue
-3. **Expected Result**: What should have happened
-4. **Actual Result**: What actually happened
-5. **Screenshots**: If applicable
-6. **Error Messages**: Any error messages or console output
-7. **Environment Details**: OS version, app version, etc.
+**Issue Report Template:**
+
+```
+**Test Case Number**: [e.g., Test Case 4.1]
+**Feature/Workflow**: [e.g., Bug Management (Jira)]
+**Severity**: [Critical / High / Medium / Low]
+
+**Steps to Reproduce**:
+1. [Step 1]
+2. [Step 2]
+3. [Step 3]
+
+**Expected Result**:
+[What should have happened according to the test case]
+
+**Actual Result**:
+[What actually happened]
+
+**Environment Details**:
+- OS: [Windows/macOS/Linux and version]
+- App Version: [If available]
+- Integration Status: [Which integrations are configured]
+
+**Error Messages**:
+[Any error messages, console output, or stack traces]
+
+**Screenshots/Attachments**:
+[Attach screenshots or logs if applicable]
+
+**Additional Notes**:
+[Any other relevant information]
+```
+
+**Severity Guidelines:**
+- **Critical**: Application crashes, data loss, security issues, prevents core workflows
+- **High**: Major feature broken, incorrect data displayed, prevents completion of workflow
+- **Medium**: Feature works but with issues, UI problems, minor data inconsistencies
+- **Low**: Cosmetic issues, minor UI inconsistencies, enhancement suggestions
+
+**Where to Report:**
+- [Specify where issues should be reported - GitHub issues, Jira, email, etc.]
+
+### Test Completion Status
+
+Track your testing progress using the Test Execution Checklist below. Mark each test case as:
+- ✅ **Passed**: Test case passed as expected
+- ❌ **Failed**: Test case failed (report as issue)
+- ⚠️ **Blocked**: Cannot test due to missing prerequisites or blocked by another issue
+- ⏭️ **Skipped**: Intentionally skipped (note reason)
+- 🔄 **In Progress**: Currently testing
 
 ### Test Priority
 

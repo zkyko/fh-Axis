@@ -19,6 +19,7 @@ const Sidebar: React.FC = () => {
   const navItems = [
     // WORKSPACE Section
     { path: '/dashboard', label: 'Dashboard', icon: LayoutDashboard, section: 'WORKSPACE' },
+    { path: '/test-viewer', label: 'Test Script Viewer', icon: Code, section: 'WORKSPACE' },
     
     // EXECUTION Section
     { path: '/automate', label: 'BrowserStack Automate', icon: Cloud, section: 'EXECUTION' },
@@ -31,7 +32,6 @@ const Sidebar: React.FC = () => {
     
     // TOOLS Section
     { path: '/repo', label: 'Repo Companion', icon: FolderGit, section: 'TOOLS' },
-    { path: '/test-viewer', label: 'Test Script Viewer', icon: Code, section: 'TOOLS' },
     { path: '/settings', label: 'Settings', icon: Settings, section: 'TOOLS' },
     { path: '/diagnostics', label: 'Diagnostics', icon: Activity, section: 'TOOLS' },
   ];

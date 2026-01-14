@@ -26,6 +26,9 @@ yarn-error.log*
 .env
 .env.local
 
+# Credentials and sensitive files
+HARDCODED_VALUES.txt
+
 # Electron
 out/
 release/
