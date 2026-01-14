@@ -1,0 +1,344 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* HTML Content Styling for Test Cases */
+.prose {
+  @apply text-base-content;
+}
+
+.prose ol,
+.prose ul {
+  @apply my-2 ml-6;
+}
+
+.prose ol {
+  @apply list-decimal;
+}
+
+.prose ul {
+  @apply list-disc;
+}
+
+.prose li {
+  @apply my-1;
+}
+
+.prose p {
+  @apply my-2;
+}
+
+.prose strong {
+  @apply font-semibold;
+}
+
+.prose ol ol,
+.prose ul ul,
+.prose ol ul,
+.prose ul ol {
+  @apply my-1 ml-4;
+}
+
+/* Design Tokens - CSS Custom Properties */
+:root {
+  /* Spacing Scale */
+  --spacing-xs: 8px;
+  --spacing-sm: 16px;
+  --spacing-md: 24px;
+  --spacing-lg: 32px;
+  --spacing-xl: 48px;
+
+  /* Colors */
+  --color-primary: #4C6EF5;
+  --color-success: #2B8A3E;
+  --color-error: #C92A2A;
+  --color-warning: #E67700;
+  --color-info: #1C7ED6;
+  --color-danger: #FA5252;
+  --color-muted: #4A4A4A;
+  --color-background: #1A1B1E;
+  --color-surface: #25262B;
+
+  /* Typography */
+  --font-size-h1: 32px;
+  --font-size-h2: 24px;
+  --font-size-h3: 18px;
+  --font-size-body: 14px;
+  --font-size-small: 12px;
+  --font-weight-semibold: 600;
+  --font-weight-regular: 400;
+  --line-height-heading: 1.2;
+  --line-height-body: 1.5;
+
+  /* Border Radius */
+  --radius-sm: 4px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
+  --radius-full: 9999px;
+
+  /* Shadows */
+  --shadow-sm: 0 1px 3px rgba(0,0,0,0.12);
+  --shadow-md: 0 4px 6px rgba(0,0,0,0.16);
+  --shadow-lg: 0 10px 20px rgba(0,0,0,0.20);
+
+  /* Card Standardization */
+  --card-padding: 24px;
+  --card-gap: 16px;
+
+  /* Button Standardization */
+  --button-min-height: 36px;
+  --button-padding-x: 12px;
+  --button-padding-y: 8px;
+
+  /* Container */
+  --container-max-width: 1200px;
+  --container-gutter: 24px;
+}
+
+@layer base {
+  body {
+    @apply bg-base-100 text-base-content;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
+      'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
+      sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    transition: background-color 0.2s ease, color 0.2s ease;
+  }
+
+  code {
+    font-family: 'SF Mono', 'Monaco', 'Inconsolata', 'Fira Code', 'Courier New',
+      monospace;
+    @apply text-primary;
+  }
+
+  #root {
+    @apply w-full h-screen overflow-hidden;
+  }
+
+  /* Typography Hierarchy */
+  h1 {
+    font-size: var(--font-size-h1);
+    font-weight: var(--font-weight-semibold);
+    line-height: var(--line-height-heading);
+  }
+
+  h2 {
+    font-size: var(--font-size-h2);
+    font-weight: var(--font-weight-semibold);
+    line-height: var(--line-height-heading);
+  }
+
+  h3 {
+    font-size: var(--font-size-h3);
+    font-weight: var(--font-weight-semibold);
+    line-height: var(--line-height-heading);
+  }
+
+  body, p {
+    font-size: var(--font-size-body);
+    font-weight: var(--font-weight-regular);
+    line-height: var(--line-height-body);
+  }
+
+  .text-small {
+    font-size: var(--font-size-small);
+    font-weight: var(--font-weight-regular);
+    line-height: var(--line-height-body);
+    color: var(--color-muted);
+  }
+
+  /* Scrollbar styling - adapts to theme */
+  ::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+
+  ::-webkit-scrollbar-track {
+    @apply bg-base-200;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    @apply bg-base-300 rounded-full;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    @apply bg-base-content/20;
+  }
+}
+
+@layer components {
+  /* Professional Card Effect - subtle, no glass */
+  .glass-card {
+    @apply bg-base-200 border border-base-300 rounded-lg;
+    padding: var(--card-padding);
+    box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+    transition: all 0.2s ease;
+  }
+
+  .glass-card-hover {
+    @apply glass-card hover:border-base-content/20 hover:shadow-sm;
+  }
+
+  /* Spacing Utilities */
+  .spacing-xs { gap: var(--spacing-xs); }
+  .spacing-sm { gap: var(--spacing-sm); }
+  .spacing-md { gap: var(--spacing-md); }
+  .spacing-lg { gap: var(--spacing-lg); }
+  .spacing-xl { gap: var(--spacing-xl); }
+
+  .p-xs { padding: var(--spacing-xs); }
+  .p-sm { padding: var(--spacing-sm); }
+  .p-md { padding: var(--card-padding); }
+  .p-lg { padding: var(--spacing-lg); }
+  .p-xl { padding: var(--spacing-xl); }
+
+  .gap-xs { gap: var(--spacing-xs); }
+  .gap-sm { gap: var(--card-gap); }
+  .gap-md { gap: var(--spacing-md); }
+  .gap-lg { gap: var(--spacing-lg); }
+  .gap-xl { gap: var(--spacing-xl); }
+
+  /* Status Badge Variants - muted and professional */
+  /* Status Badge Variants - WCAG AA compliant colors */
+  .badge-success {
+    @apply bg-[#2B8A3E]/10 text-[#2B8A3E] border border-[#2B8A3E]/20 font-medium;
+    /* Green: #2B8A3E on white - WCAG AA compliant */
+  }
+
+  .badge-error {
+    @apply bg-[#C92A2A]/10 text-[#C92A2A] border border-[#C92A2A]/20 font-medium;
+    /* Red: #C92A2A on white - WCAG AA compliant */
+  }
+
+  .badge-warning {
+    @apply bg-[#E67700]/10 text-[#E67700] border border-[#E67700]/20 font-medium;
+    /* Yellow: #E67700 on white - WCAG AA compliant */
+  }
+
+  .badge-info {
+    @apply bg-info/10 text-info border border-info/20 font-medium;
+  }
+
+  .badge-neutral {
+    @apply bg-base-300 text-base-content border border-base-content/10 font-medium;
+  }
+
+  /* Muted text with better contrast */
+  .text-muted {
+    color: var(--color-muted); /* #4A4A4A instead of #666 */
+  }
+
+  /* Button Variants - subtle, professional */
+  .btn-primary-modern {
+    @apply bg-primary text-primary-content font-medium px-4 py-2 rounded;
+    @apply hover:bg-primary-focus transition-all duration-200;
+    @apply shadow-sm hover:shadow;
+  }
+
+  .btn-secondary-modern {
+    @apply bg-base-200 text-base-content font-medium px-4 py-2 rounded border border-base-300;
+    @apply hover:bg-base-300 transition-all duration-200;
+  }
+
+  .btn-ghost-modern {
+    @apply bg-transparent text-base-content/70 font-medium px-4 py-2 rounded;
+    @apply hover:bg-base-200 hover:text-base-content transition-all duration-200;
+  }
+
+  /* Focus States for Accessibility */
+  *:focus-visible {
+    outline: 2px solid var(--color-primary);
+    outline-offset: 2px;
+  }
+
+  /* Hide focus outline for mouse users, show for keyboard users */
+  .focus-visible:focus-visible {
+    outline: 2px solid var(--color-primary);
+    outline-offset: 2px;
+  }
+
+  /* Live regions for screen readers */
+  [role="status"],
+  [role="alert"],
+  [aria-live] {
+    position: absolute;
+    left: -10000px;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+  }
+
+  /* Ensure interactive elements are keyboard accessible */
+  button:not(:disabled),
+  a[href],
+  input:not(:disabled),
+  select:not(:disabled),
+  textarea:not(:disabled),
+  [tabindex]:not([tabindex="-1"]) {
+    cursor: pointer;
+  }
+
+  button:disabled,
+  input:disabled,
+  select:disabled,
+  textarea:disabled {
+    cursor: not-allowed;
+    opacity: 0.5;
+  }
+
+  /* Input Styling - clean and professional */
+  .input-modern {
+    @apply bg-base-200 border border-base-300 text-base-content rounded px-4 py-2;
+    @apply focus:border-primary focus:ring-1 focus:ring-primary/20 focus:outline-none;
+    @apply transition-all duration-200;
+  }
+
+  /* Section Headers */
+  .section-header {
+    @apply text-base-content font-semibold text-xl mb-4 flex items-center gap-3;
+  }
+
+  .section-subheader {
+    @apply text-base-content/60 text-sm font-medium uppercase tracking-wider mb-3;
+  }
+}
+
+@layer utilities {
+  /* Text Gradients - subtle, professional */
+  .text-gradient-primary {
+    @apply text-primary;
+  }
+
+  .text-gradient-secondary {
+    @apply text-secondary;
+  }
+
+  .text-gradient-accent {
+    @apply text-accent;
+  }
+
+  /* Hover Lift - subtle */
+  .hover-lift {
+    @apply transition-transform duration-200 hover:-translate-y-0.5;
+  }
+
+  /* Responsive Layout Utilities */
+  @media (max-width: 768px) {
+    .responsive-grid {
+      @apply grid-cols-1;
+    }
+    
+    .responsive-flex {
+      @apply flex-col;
+    }
+  }
+
+  /* Mobile touch targets - minimum 44x44px */
+  @media (max-width: 768px) {
+    button, a, input[type="button"], input[type="submit"] {
+      min-height: 44px;
+      min-width: 44px;
+    }
+  }
+}

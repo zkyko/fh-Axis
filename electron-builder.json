@@ -1,0 +1,33 @@
+{
+  "appId": "com.fourhands.axis",
+  "productName": "Axis",
+  "directories": {
+    "output": "release"
+  },
+  "files": [
+    "dist/**/*",
+    "package.json"
+  ],
+  "win": {
+    "target": [
+      {
+        "target": "nsis",
+        "arch": ["x64"]
+      }
+    ],
+    "icon": "build/icon.ico"
+  },
+  "nsis": {
+    "oneClick": false,
+    "allowToChangeInstallationDirectory": true,
+    "createDesktopShortcut": true,
+    "createStartMenuShortcut": true
+  },
+  "publish": [
+    {
+      "provider": "generic",
+      "url": "https://example.com/axis-updates"
+    }
+  ]
+}
+

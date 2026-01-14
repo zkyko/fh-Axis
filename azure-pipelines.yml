@@ -1,0 +1,44 @@
+# Azure DevOps Pipeline for Axis
+# Builds Windows installer and publishes as artifact
+
+trigger:
+  branches:
+    include:
+      - main
+      - master
+  paths:
+    exclude:
+      - docs/**/*
+
+pool:
+  vmImage: 'windows-latest'
+
+variables:
+  nodeVersion: '20.x'
+
+steps:
+  - task: NodeTool@0
+    inputs:
+      versionSpec: '$(nodeVersion)'
+    displayName: 'Setup Node.js'
+
+  - script: |
+      npm ci
+    displayName: 'Install dependencies'
+
+  - script: |
+      npm run build
+    displayName: 'Build application'
+
+  - script: |
+      npm run dist
+    displayName: 'Build Windows installer'
+    continueOnError: false
+
+  - task: PublishBuildArtifacts@1
+    inputs:
+      pathToPublish: '$(System.DefaultWorkingDirectory)/release'
+      artifactName: 'Axis-Installer'
+      publishLocation: 'Container'
+    displayName: 'Publish installer artifact'
+
