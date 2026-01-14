@@ -29,4 +29,12 @@ yarn-error.log*
 # Electron
 out/
 release/
+# Allow installer files in release directory (for GitHub releases)
+!release/*.exe
+!release/*.dmg
+!release/*.AppImage
+!release/*.deb
+!release/*.rpm
+!release/*.zip
+!release/latest.yml
 
