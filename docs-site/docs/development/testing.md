@@ -1,4 +1,4 @@
-# Axis Application - Comprehensive Test Documentation
+# QA Hub Application - Comprehensive Test Documentation
 
 ## Table of Contents
 
@@ -15,11 +15,11 @@
 
 ## Introduction & Prerequisites
 
-### What is Axis?
+### What is QA Hub?
 
-Axis is a desktop Electron application that provides unified test execution, failure analysis, and defect tracking. It integrates with BrowserStack Automate, BrowserStack Test Management, Jira, and Azure DevOps to help QA and Development teams triage failures, correlate evidence, and manage workflows.
+QA Hub is a desktop Electron application that provides unified test execution, failure analysis, and defect tracking. It integrates with BrowserStack Automate, BrowserStack Test Management, Jira, and Azure DevOps to help QA and Development teams triage failures, correlate evidence, and manage workflows.
 
-**Core Philosophy**: Axis is designed as a system that forces structure in QA workflows. Rather than just running tests, Axis enforces a structured approach: **understand failures → capture evidence → create actionable defects**. This ensures every test failure is properly analyzed, documented, and tracked through to resolution.
+**Core Philosophy**: QA Hub is designed as a system that forces structure in QA workflows. Rather than just running tests, QA Hub enforces a structured approach: **understand failures → capture evidence → create actionable defects**. This ensures every test failure is properly analyzed, documented, and tracked through to resolution.
 
 **Key Capabilities:**
 - View and analyze test executions from BrowserStack Automate
@@ -65,14 +65,14 @@ Before testing, you should have access to:
 
 ## Quick Start for Testers
 
-**Welcome!** This guide will help you test the Axis application systematically. Follow these steps to get started:
+**Welcome!** This guide will help you test the QA Hub application systematically. Follow these steps to get started:
 
 ### Step 1: Install and Launch
 
 1. **Install the Application**
    - Install the provided executable file
    - Ensure Git is installed on your system (required for repository operations)
-   - Launch the Axis application
+   - Launch the QA Hub application
 
 2. **First Launch Verification**
    - Application should open without errors
@@ -149,7 +149,7 @@ As you test, use the **Test Execution Checklist** at the end of this document to
 **Objective**: Verify the application launches successfully and displays the main interface.
 
 **Steps**:
-1. Launch the compiled Axis application
+1. Launch the compiled QA Hub application
 2. Wait for the application window to appear
 3. Observe the initial screen
 
@@ -298,7 +298,7 @@ As you test, use the **Test Execution Checklist** at the end of this document to
 **Steps**:
 1. Navigate to Repo Companion screen
 2. Observe the default workspace path displayed
-3. Verify the path exists (should be `~/Documents/Axis-Workspace` on macOS/Linux, or `Documents\Axis-Workspace` on Windows)
+3. Verify the path exists (should be `~/Documents/QA-Hub-Workspace` on macOS/Linux, or `Documents\QA-Hub-Workspace` on Windows)
 
 **Expected Results**:
 - ✅ Default workspace path is displayed
@@ -559,9 +559,9 @@ As you test, use the **Test Execution Checklist** at the end of this document to
 
 ### Workflow 3: Bug Management (Jira)
 
-**Jira Bug Creation Overview (Axis V1)**
+**Jira Bug Creation Overview (QA Hub V1)**
 
-This workflow aligns Jira bug creation with Axis's core philosophy: structured QA workflows driven by evidence and traceability.
+This workflow aligns Jira bug creation with QA Hub's core philosophy: structured QA workflows driven by evidence and traceability.
 
 **Implemented Capabilities:**
 
@@ -1903,7 +1903,7 @@ Focus testing in this order:
 ### Default Paths
 
 - **Database**: `{userData}/qa-hub.db` (OS-specific userData directory)
-- **Default Workspace**: `~/Documents/Axis-Workspace` (macOS/Linux) or `Documents\Axis-Workspace` (Windows)
+- **Default Workspace**: `~/Documents/QA-Hub-Workspace` (macOS/Linux) or `Documents\QA-Hub-Workspace` (Windows)
 - **Settings Storage**: OS-backed encrypted store (electron-store)
 
 ### Key Keyboard Shortcuts

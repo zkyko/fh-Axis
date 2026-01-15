@@ -25,7 +25,7 @@ The `jira:prepare-bug-draft` IPC channel creates a structured draft from the fai
   - Error information
   - Evidence links (BrowserStack session, videos, logs)
   - Related commits (if available)
-- **Labels** - Auto-suggested labels (e.g., `axis`, `automation`, `browserstack`)
+- **Labels** - Auto-suggested labels (e.g., `qa-hub`, `automation`, `browserstack`)
 
 ### 3. Review and Edit
 
@@ -105,7 +105,7 @@ Description:
 - **Branch:** [Branch Name]
 
 ## Labels
-axis, automation, browserstack
+qa-hub, automation, browserstack
 ```
 
 ## Best Practices

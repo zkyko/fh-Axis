@@ -57,7 +57,7 @@ This becomes your traceability:
 
 D) Local repo (optional)
 
-If you’re scanning repos under Documents/Axis-Workspace, you can get:
+If you're scanning repos under Documents/QA-Hub-Workspace, you can get:
 
 file path of the spec
 
@@ -143,7 +143,7 @@ a Session row (has session hashed_id)
 
 a TM test case (has test case id + project)
 
-Axis already has these IDs because you’re listing builds / test cases.
+QA Hub already has these IDs because you're listing builds / test cases.
 
 Step 2 — Enrichment calls happen in main process
 
@@ -174,7 +174,7 @@ store it as artifact (JUnit XML / JSON)
 
 or expose it via ADO logs
 
-Axis can fetch run logs + parse out failure summary.
+QA Hub can fetch run logs + parse out failure summary.
 
 ✅ Good: pull from BrowserStack session logs
 
@@ -206,10 +206,10 @@ This is solved by correlation key (you already planned this).
 In your ADO pipeline, set BrowserStack build name like:
 
 ```
-Axis|adoRun=<RUN_ID>|repo=<REPO>|branch=<BRANCH>
+QA-Hub|adoRun=<RUN_ID>|repo=<REPO>|branch=<BRANCH>
 ```
 
-Then Axis:
+Then QA Hub:
 
 reads build name
 
@@ -228,7 +228,7 @@ summary = ...
 
 description = renderTemplate(FailureContext)
 
-labels = ['axis', 'automation', <component>]
+labels = ['qa-hub', 'automation', <component>]
 
 optional fields = priority/component/etc
 ```

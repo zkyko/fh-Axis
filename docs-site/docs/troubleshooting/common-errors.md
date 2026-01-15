@@ -48,7 +48,7 @@ Once Azure Blob hosting is configured, the feed URL will be updated in `electron
 
 ### Common Issues
 
-- **Credentials**: QA Hub reads credentials from your local `.env` file. Verify the required `AXIS_*` keys are set correctly.
+- **Credentials**: QA Hub reads credentials from your local `.env` file. Verify the required `QA_HUB_*` keys are set correctly.
 - **API limits**: BrowserStack has rate limits. If you hit limits, wait a few minutes and try again.
 
 ## Jira Create Failures
@@ -180,9 +180,9 @@ If configuration seems corrupted:
 
 1. Close QA Hub
 2. Clear settings (location depends on OS):
-   - **Windows**: `%APPDATA%\axis\`
-   - **macOS**: `~/Library/Application Support/axis/`
-   - **Linux**: `~/.config/axis/`
+   - **Windows**: `%APPDATA%\qa-hub\`
+   - **macOS**: `~/Library/Application Support/qa-hub/`
+   - **Linux**: `~/.config/qa-hub/`
 3. Restart QA Hub and reconfigure
 
 ### Network Issues

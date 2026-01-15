@@ -54,10 +54,6 @@ const config = {
     ({
       navbar: {
         title: 'QA Hub',
-        logo: {
-          alt: 'QA Hub Logo',
-          src: 'img/logo.svg',
-        },
         items: [],
       },
       footer: {
