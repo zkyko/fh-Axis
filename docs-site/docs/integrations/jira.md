@@ -223,6 +223,7 @@ This gives you traceability for Jira automatically.
 
 Once you have FailureContext, Jira creation is just:
 
+```
 summary = ...
 
 description = renderTemplate(FailureContext)
@@ -230,6 +231,7 @@ description = renderTemplate(FailureContext)
 labels = ['axis', 'automation', <component>]
 
 optional fields = priority/component/etc
+```
 
 What to implement first (fastest path)
 V1 (works immediately)
