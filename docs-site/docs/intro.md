@@ -33,12 +33,22 @@ QA Hub is designed to **force structure in QA workflows**. Rather than just runn
 
 It's important to understand what QA Hub is **not**:
 
+- ❌ **Not a test script generator** - QA Hub does NOT generate or create test scripts. Your team writes test scripts manually (e.g., for D365 and web applications) using their preferred tools and frameworks.
 - ❌ **Not a test runner** - QA Hub does not execute tests locally
 - ❌ **Not a Playwright wrapper** - QA Hub does not wrap or generate Playwright code
 - ❌ **Not a CI trigger system** - QA Hub focuses on triage and workflow management
+- ❌ **Not a pipeline upload tool** - QA Hub does not upload test scripts to Azure DevOps pipelines. Your team manages test scripts in Azure DevOps repositories and uploads them to pipelines through Azure DevOps.
 - ❌ **Not a complete replacement** for BrowserStack UI when API gaps exist
 
-**Execution remains in CI + BrowserStack.** QA Hub is a **triage and workflow management tool**, not an execution platform.
+**Test Script Workflow:**
+- Your team **codes test scripts** for D365 and web applications
+- Test scripts are **managed and uploaded to Azure DevOps pipelines** (outside of QA Hub)
+- QA Hub helps **organize and manage the workflow** around these existing test scripts:
+  - **Git operations**: push, pull, commit test scripts
+  - **Repository management**: organize and track test script repositories
+  - **Workflow organization**: manage the workflow around test execution and failure analysis
+
+**Execution remains in CI + BrowserStack.** QA Hub is a **triage and workflow management tool**, not an execution platform or test script generator.
 
 ## Integrations
 
@@ -63,16 +73,18 @@ It's important to understand what QA Hub is **not**:
 
 ### Azure DevOps
 
-- Repository management (clone, pull, push)
-- Commit tracking and branch management
-- Code correlation with test results
-- Git workflow operations (stage, commit, branch management)
+- **Repository management** - Clone, pull, push test script repositories
+- **Git workflow operations** - Stage, commit, and manage branches for test scripts
+- **Commit tracking** - Track commits and correlate with test results
+- **Pipeline integration** - View pipeline runs and build information (test scripts are uploaded to pipelines via Azure DevOps, not through QA Hub)
+
+**Important**: QA Hub does NOT upload test scripts to pipelines. Your team manages test scripts in Azure DevOps repositories and uploads them to pipelines through Azure DevOps. QA Hub helps organize the workflow around these repositories and correlates test execution results with commits and branches.
 
 ## Workflows
 
 QA Hub supports the following key workflows:
 
-1. **Repo Companion → Automate → TM → Jira** - The complete workflow from test creation to defect tracking
+1. **Repository Management → Test Execution → Failure Analysis → Defect Tracking** - The complete workflow from managing test script repositories to defect tracking
 2. **Failure Analysis** - View execution evidence, correlate with code changes, and create actionable defects
 3. **Triage Workflow** - Assign, label, and comment on failures
 4. **Correlation** - Link test results to sessions, Jira issues, and Azure commits
@@ -81,9 +93,12 @@ QA Hub supports the following key workflows:
 
 ### QA Engineers
 
-- Create tests (templates), manage repo state (git)
-- Map tests to BrowserStack TM cases
-- Triage failures, label, and create/link Jira defects
+- **Manage test script repositories** - Use Git operations (push, pull, commit) to organize test scripts that your team has already written
+- **Organize workflow** - Manage the workflow around test execution, failure analysis, and defect tracking
+- **Map tests to BrowserStack TM cases** - Link existing test scripts to BrowserStack Test Management cases
+- **Triage failures** - Analyze test failures, label, and create/link Jira defects
+
+**Note**: QA Hub does NOT generate test scripts. Your team writes test scripts (for D365, web, etc.) and manages them through Azure DevOps. QA Hub helps organize the workflow around these existing test scripts.
 
 ### Developers
 

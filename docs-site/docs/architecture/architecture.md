@@ -12,17 +12,21 @@
 
 - Provide multi-user collaboration workflows (triage/assign/labels) without owning execution
 
-- Provide QA-only repo companion features (create test template, git state, open IDE)
+- Provide QA-only repo companion features (organize test files with templates, git state, open IDE)
 
 - Package reliably as a Windows EXE (no Playwright binaries)
 
 ## 2. Non-Goals
+
+- Not a test script generator - Does not generate or create test scripts (team writes test scripts manually)
 
 - Not a test runner
 
 - Not Playwright wrapper/codegen
 
 - Not CI trigger system (may be optional later)
+
+- Not a pipeline upload tool - Does not upload test scripts to Azure DevOps pipelines
 
 - Not a complete replacement of BrowserStack UI when API gaps exist
 
@@ -123,7 +127,7 @@ Stored locally:
 ### 5.4 Repo Companion (QA-only)
 
 - **Default Workspace Management**
-  - Default directory: `~/Documents/QA-Studio-Workspace`
+  - Default directory: `~/Documents/QA-Hub-Workspace`
   - Auto-created on first use
   - Persistent storage in database
 
@@ -157,7 +161,7 @@ Stored locally:
   - Local path display and management
 
 - **Future Features**
-  - Test template generation
+  - File templates for organizing test files (note: does not generate test scripts, only provides organizational structure)
   - Git diff viewer
   - File comparison
 

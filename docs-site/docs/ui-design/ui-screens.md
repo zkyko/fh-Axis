@@ -133,7 +133,7 @@ Actions:
 
 ### Default Workspace
 
-- Default location: `~/Documents/QA-Studio-Workspace`
+- Default location: `~/Documents/QA-Hub-Workspace`
 - Auto-created on first use
 - All clones go here by default (unless user selects different location)
 - Stored in database for persistence

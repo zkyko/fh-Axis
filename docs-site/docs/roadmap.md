@@ -11,7 +11,7 @@
 - ✅ Multiple repository support
 
 ### Git Workflow Management
-- ✅ Default workspace directory (`~/Documents/QA-Studio-Workspace`)
+- ✅ Default workspace directory (`~/Documents/QA-Hub-Workspace`)
 - ✅ Auto-detection of cloned repositories
 - ✅ Sync status indicators (ahead/behind)
 - ✅ Full Git operations (clone, pull, push)
@@ -65,7 +65,7 @@
 - ✅ open in VS Code
 - ✅ default workspace management
 - ✅ sync status indicators
-- ⏳ templates for new test files (planned)
+- ⏳ file templates for organizing test files (planned - note: does not generate test scripts, only provides organizational templates)
 - ⏳ QA-only role enforcement (planned)
 
 ## Phase 4: Correlation + Intelligence

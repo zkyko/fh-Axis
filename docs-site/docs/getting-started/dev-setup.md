@@ -107,7 +107,7 @@ npm start
 
 ### Default Workspace
 
-- **Default Location**: `~/Documents/QA-Studio-Workspace`
+- **Default Location**: `~/Documents/QA-Hub-Workspace`
 - **Auto-created**: On first repository clone
 - **Stored in**: Database (`app_settings` table)
 - **Configurable**: Via IPC handlers (future: Settings UI)

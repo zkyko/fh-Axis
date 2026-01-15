@@ -74,6 +74,8 @@ Purpose: defects
 
 Purpose: repository management, commit tracking, and code correlation
 
+**Important**: QA Hub does NOT upload test scripts to Azure DevOps pipelines. Your team writes test scripts (for D365, web, etc.) and manages/uploads them to pipelines through Azure DevOps. QA Hub helps organize the workflow around these repositories.
+
 ### Implemented Features
 
 - **Repository Management**
@@ -81,6 +83,7 @@ Purpose: repository management, commit tracking, and code correlation
   - Parse repository URLs (supports both `dev.azure.com` and `visualstudio.com` formats)
   - Support for multiple repositories per workspace
   - Default repository configuration (e.g., "Web Workspace")
+  - Manage test script repositories that your team has already created
 
 - **Commit Tracking**
   - Fetch commits from Azure Repos
@@ -94,10 +97,10 @@ Purpose: repository management, commit tracking, and code correlation
   - Automatic token injection for Git operations
 
 - **Git Operations**
-  - Clone repositories to default workspace
-  - Pull latest changes
-  - Push commits to remote
-  - Full Git workflow management (stage, unstage, commit)
+  - Clone test script repositories to default workspace
+  - Pull latest changes from test script repositories
+  - Push commits to remote (for test scripts your team has written)
+  - Full Git workflow management (stage, unstage, commit) for organizing test scripts
 
 ### Deep Links
 
