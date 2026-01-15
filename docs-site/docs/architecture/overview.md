@@ -51,7 +51,7 @@ The main process is organized around **service classes**:
 - **BrowserStackTMService** - Fetches projects, runs, and test results
 - **JiraService** - Creates, searches, and links issues
 - **AzureDevOpsService** - Repository and commit management
-- **AzurePipelinesService** - Pipeline runs and status
+- **AzurePipelinesService** - Trigger pipeline executions, monitor pipeline runs and status
 - **StorageService** - Database operations
 - **CorrelationEngine** - Links test results to evidence and issues
 - **WorkspaceService** - Manages the default workspace directory

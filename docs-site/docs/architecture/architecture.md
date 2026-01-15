@@ -13,6 +13,7 @@
 - Provide multi-user collaboration workflows (triage/assign/labels) without owning execution
 
 - Provide QA-only repo companion features (organize test files with templates, git state, open IDE)
+- Provide remote test execution via Azure DevOps pipelines (trigger pipeline runs that execute tests on BrowserStack Automate)
 
 - Package reliably as a Windows EXE (no Playwright binaries)
 
@@ -20,11 +21,11 @@
 
 - Not a test script generator - Does not generate or create test scripts (team writes test scripts manually)
 
-- Not a test runner
+- Not a local test runner - Does not execute tests locally on your machine (executes remotely via Azure DevOps pipelines)
 
 - Not Playwright wrapper/codegen
 
-- Not CI trigger system (may be optional later)
+- Not a pipeline configuration tool - Does not configure Azure DevOps pipelines (pipeline setup done in Azure DevOps)
 
 - Not a pipeline upload tool - Does not upload test scripts to Azure DevOps pipelines
 
