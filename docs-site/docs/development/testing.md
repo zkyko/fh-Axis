@@ -1,5 +1,7 @@
 # QA Hub Application - Comprehensive Test Documentation
 
+**Note**: This documentation is for **testing the QA Hub application itself**. It provides test cases and procedures for verifying that QA Hub works correctly. This is NOT documentation for using QA Hub to test other applications or systems.
+
 ## Table of Contents
 
 1. [Introduction & Prerequisites](#introduction--prerequisites)
@@ -14,6 +16,8 @@
 ---
 
 ## Introduction & Prerequisites
+
+**Purpose of This Document**: This document provides comprehensive test cases and procedures for **testing the QA Hub desktop application**. Use this document to verify that QA Hub's features, integrations, and workflows function correctly.
 
 ### What is QA Hub?
 
@@ -36,9 +40,9 @@ QA Hub is a desktop Electron application that provides unified test execution, f
 - **Internet Connection**: Required for API integrations
 - **Disk Space**: ~500MB for application and data storage
 
-### Prerequisites for Testing
+### Prerequisites for Testing QA Hub
 
-Before testing, you should have access to:
+Before testing the QA Hub application, you should have access to:
 
 1. **BrowserStack Account**
    - BrowserStack Automate account with username and access key
@@ -63,9 +67,11 @@ Before testing, you should have access to:
 
 ---
 
-## Quick Start for Testers
+## Quick Start for Testing QA Hub
 
-**Welcome!** This guide will help you test the QA Hub application systematically. Follow these steps to get started:
+**Welcome!** This guide will help you **test the QA Hub application** systematically. Follow these steps to get started:
+
+**Important**: You are testing QA Hub itself, not using QA Hub to test other applications.
 
 ### Step 1: Install and Launch
 
