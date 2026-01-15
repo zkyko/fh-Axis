@@ -75,7 +75,8 @@ Purpose: defects
 Purpose: repository management, commit tracking, code correlation, and **remote test execution**
 
 **Important**: 
-- QA Hub does NOT write or generate test scripts. Your team writes test scripts (for D365, web, etc.) and stores them in Azure DevOps repositories.
+- QA Hub does NOT write or generate test scripts. Your team writes test scripts (for D365, web, etc.) using their preferred tools.
+- QA Hub **CAN upload test scripts** - You can push test scripts (that your team has written) to Azure DevOps repositories using Git operations.
 - QA Hub does NOT configure pipelines. Pipeline setup is done in Azure DevOps.
 - QA Hub **CAN trigger pipeline executions** - You can execute test runs from QA Hub, which triggers Azure DevOps pipelines that run your test scripts on BrowserStack Automate.
 
@@ -99,11 +100,13 @@ Purpose: repository management, commit tracking, code correlation, and **remote 
   - Secure token storage in main process
   - Automatic token injection for Git operations
 
-- **Git Operations**
+- **Git Operations (Test Script Upload & Management)**
   - Clone test script repositories to default workspace
   - Pull latest changes from test script repositories
-  - Push commits to remote (for test scripts your team has written)
-  - Full Git workflow management (stage, unstage, commit) for organizing test scripts
+  - **Push test scripts to Azure DevOps** - Upload test scripts to remote repositories (stage, commit, push workflow)
+  - Full Git workflow management (stage, unstage, commit) for managing test scripts
+  - Pre-push safety checks (protected branch enforcement, commit message validation, branch naming rules)
+  - Branch management (create, switch branches with `qa/` prefix enforcement)
 
 - **Pipeline Execution (Remote Test Triggering)**
   - List available pipelines in Azure DevOps project

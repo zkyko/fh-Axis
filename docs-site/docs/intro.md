@@ -119,11 +119,22 @@ QA Hub provides the following capabilities with their underlying logic:
 
 **How it works:**
 1. **Repository Discovery** - Lists repositories from Azure DevOps projects using PAT authentication
-2. **Git Operations** - Performs Git operations (clone, pull, push, commit, branch management) using system Git
-3. **Commit Tracking** - Fetches commit history and details, linking commits to test results
-4. **Correlation** - Uses commit hashes and branch information to correlate code changes with test failures
+2. **Git Operations** - Performs full Git workflow operations using system Git:
+   - **Clone** - Clone test script repositories to local workspace
+   - **Pull** - Pull latest changes from Azure DevOps
+   - **Stage/Unstage** - Stage and unstage test script files
+   - **Commit** - Commit test scripts with structured commit messages (guided workflow with summary, why, risk level)
+   - **Push** - **Upload test scripts to Azure DevOps** - Push committed test scripts to remote repositories
+   - **Branch Management** - Create, switch, and manage branches (enforces `qa/` prefix for feature branches)
+3. **Pre-push Safety Checks** - Before pushing, QA Hub validates:
+   - Protected branch enforcement (cannot push directly to main/master)
+   - Commit message quality (prevents generic messages like "wip", "test", "fix")
+   - Branch naming conventions (feature branches must start with `qa/`)
+   - Staged file validation
+4. **Commit Tracking** - Fetches commit history and details, linking commits to test results
+5. **Correlation** - Uses commit hashes and branch information to correlate code changes with test failures
 
-**Result**: QA Hub helps manage test script repositories and provides traceability between code changes and test results.
+**Result**: QA Hub helps manage test script repositories, **upload test scripts to Azure DevOps**, and provides traceability between code changes and test results.
 
 ## What QA Hub Does NOT Do
 
@@ -133,17 +144,18 @@ It's important to understand what QA Hub is **not**:
 - ❌ **Not a test runner** - QA Hub does not execute tests locally
 - ❌ **Not a Playwright wrapper** - QA Hub does not wrap or generate Playwright code
 - ❌ **Not a local test runner** - QA Hub does not execute tests locally on your machine
-- ❌ **Not a pipeline upload tool** - QA Hub does not upload test scripts to Azure DevOps pipelines. Your team manages test scripts in Azure DevOps repositories and uploads them to pipelines through Azure DevOps.
+- ❌ **Not a pipeline configuration tool** - QA Hub does not configure Azure DevOps pipelines. Pipeline setup is done in Azure DevOps.
 - ❌ **Not a complete replacement** for BrowserStack UI when API gaps exist
 
 **Test Script Workflow:**
-- Your team **codes test scripts** for D365 and web applications
-- Test scripts are **stored in Azure DevOps repositories** (managed through Azure DevOps)
+- Your team **codes test scripts** for D365 and web applications (using their preferred tools)
+- QA Hub **uploads test scripts to Azure DevOps** - You can push test scripts to Azure DevOps repositories using Git operations (stage, commit, push)
 - Test scripts are **configured in Azure DevOps pipelines** (pipeline setup done in Azure DevOps)
-- QA Hub **triggers pipeline executions** remotely - you can execute test runs from QA Hub, which triggers Azure DevOps pipelines that run tests on BrowserStack Automate
+- QA Hub **triggers pipeline executions** remotely - You can execute test runs from QA Hub, which triggers Azure DevOps pipelines that run tests on BrowserStack Automate
 - QA Hub helps **organize and manage the workflow** around test execution:
+  - **Upload test scripts**: Push test scripts to Azure DevOps repositories via Git
   - **Remote execution**: Trigger pipeline runs with different scopes (all tests, specific file, tag, or grep pattern)
-  - **Git operations**: Push, pull, commit test scripts in repositories
+  - **Git operations**: Pull, commit, branch management for test script repositories
   - **Repository management**: Organize and track test script repositories
   - **Workflow organization**: Manage the workflow around test execution and failure analysis
 
@@ -183,7 +195,8 @@ It's important to understand what QA Hub is **not**:
 - **Pipeline monitoring** - View pipeline run status, logs, and build information
 
 **Important**: 
-- QA Hub does NOT write or generate test scripts. Your team writes test scripts (for D365, web, etc.) and stores them in Azure DevOps repositories.
+- QA Hub does NOT write or generate test scripts. Your team writes test scripts (for D365, web, etc.) using their preferred tools.
+- QA Hub **CAN upload test scripts** - You can push test scripts (that your team has written) to Azure DevOps repositories using Git operations (stage, commit, push).
 - QA Hub does NOT configure pipelines. Pipeline setup and configuration is done in Azure DevOps.
 - QA Hub **CAN trigger pipeline executions** - You can execute test runs from QA Hub, which triggers Azure DevOps pipelines that run your test scripts on BrowserStack Automate.
 - QA Hub helps organize the workflow around test execution and correlates test execution results with commits and branches.
