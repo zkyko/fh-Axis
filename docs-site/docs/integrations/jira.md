@@ -204,7 +204,10 @@ no fancy parsing
 This is solved by correlation key (you already planned this).
 
 In your ADO pipeline, set BrowserStack build name like:
+
+```
 Axis|adoRun=<RUN_ID>|repo=<REPO>|branch=<BRANCH>
+```
 
 Then Axis:
 
