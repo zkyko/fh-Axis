@@ -12,9 +12,9 @@ const config = {
   favicon: 'img/favicon.ico',
 
   // Set the production url of your site here
-  url: 'https://your-docs-site.com',
+  url: 'https://zkyko.github.io',
   // Set the /<baseUrl>/ pathname under which your site is served
-  baseUrl: '/Fh-tool/',
+  baseUrl: '/fh-Axis/',
 
   organizationName: 'fourhands',
   projectName: 'axis-docs',
