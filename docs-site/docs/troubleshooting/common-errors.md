@@ -196,8 +196,8 @@ If you're experiencing network-related errors:
 
 ### Still Having Issues?
 
-1. Check the [Architecture Overview](./architecture/overview.md) to understand how QA Hub works
-2. Review the [IPC Contract](./architecture/ipc.md) to understand communication flow
+1. Check the [Architecture Overview](../architecture/overview.md) to understand how QA Hub works
+2. Review the [IPC Contract](../architecture/ipc.md) to understand communication flow
 3. Check existing documentation for your specific use case
 4. Contact your team's QA Hub administrator
 
