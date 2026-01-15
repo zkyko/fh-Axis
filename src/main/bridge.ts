@@ -14,7 +14,7 @@ import { RepoDiscoveryService } from './services/repo-discovery';
 import { buildFailureContext } from './services/failure-context-builder';
 import { renderDraft } from './services/jira-template-renderer';
 import { UpdaterService, UpdaterEvent } from './services/updater';
-import { FailureContextInput, JiraDraft } from './types';
+import { FailureContext, FailureContextInput, JiraDraft } from './types';
 import { 
   isProtectedBranch, 
   validateBranchName, 
@@ -29,6 +29,7 @@ import { promisify } from 'util';
 import * as path from 'path';
 import * as fs from 'fs';
 import * as os from 'os';
+import { PomIntrospectionService } from './services/pom-introspection';
 
 const execAsync = promisify(exec);
 
@@ -36,6 +37,11 @@ const execAsync = promisify(exec);
 let storage: StorageService | null = null;
 let correlationEngine: CorrelationEngine | null = null;
 const settingsStore = new Store();
+
+const envStr = (key: string): string => {
+  const v = process.env[key];
+  return typeof v === 'string' ? v.trim() : '';
+};
 
 let automateService: BrowserStackAutomateService | null = null;
 let tmService: BrowserStackTMService | null = null;
@@ -45,6 +51,7 @@ let azurePipelinesService: AzurePipelinesService | null = null;
 let testDiscoveryService: TestDiscoveryService | null = null;
 let runPoller: RunPoller | null = null;
 let updaterService: UpdaterService | null = null;
+const pomService = new PomIntrospectionService();
 
 // Helper function to get main window for event forwarding
 function getMainWindow(): BrowserWindow | null {
@@ -68,44 +75,55 @@ function getCorrelationEngine(): CorrelationEngine {
   return correlationEngine;
 }
 
-// Initialize services from settings
+// Initialize services from `.env` (source of truth for credentials)
 function initializeServices() {
-  const engine = getCorrelationEngine();
-  
-  // BrowserStack Automate credentials from settings
-  const bsAutomate = settingsStore.get('browserstack.automate', {}) as any;
-  if (bsAutomate.username && bsAutomate.accessKey) {
-    automateService = new BrowserStackAutomateService(bsAutomate.username, bsAutomate.accessKey);
-    engine.setAutomateService(automateService);
+  // Stop any long-running background work tied to old credentials.
+  if (runPoller) {
+    runPoller.stop();
+    runPoller = null;
   }
 
-  // BrowserStack TM credentials from settings
-  const bsTM = settingsStore.get('browserstack.tm', {}) as any;
-  if (bsTM.username && bsTM.accessKey) {
-    tmService = new BrowserStackTMService(bsTM.username, bsTM.accessKey);
+  // Recreate correlation engine so it can't keep stale service instances.
+  correlationEngine = null;
+  const engine = getCorrelationEngine();
+
+  automateService = null;
+  tmService = null;
+  jiraService = null;
+  azureService = null;
+  azurePipelinesService = null;
+  
+  // BrowserStack (used for both Automate + TM)
+  const bsUsername = envStr('AXIS_BROWSERSTACK_USERNAME');
+  const bsAccessKey = envStr('AXIS_BROWSERSTACK_ACCESS_KEY');
+  if (bsUsername && bsAccessKey) {
+    automateService = new BrowserStackAutomateService(bsUsername, bsAccessKey);
+    engine.setAutomateService(automateService);
+    tmService = new BrowserStackTMService(bsUsername, bsAccessKey);
     engine.setTMService(tmService);
   }
 
-  const jira = settingsStore.get('jira', {}) as any;
-
-  if (jira.baseUrl && jira.email && jira.apiToken) {
-    jiraService = new JiraService(jira.baseUrl, jira.email, jira.apiToken);
+  const jiraBaseUrl = envStr('AXIS_JIRA_BASE_URL');
+  const jiraEmail = envStr('AXIS_JIRA_EMAIL');
+  const jiraApiToken = envStr('AXIS_JIRA_API_TOKEN');
+  if (jiraBaseUrl && jiraEmail && jiraApiToken) {
+    jiraService = new JiraService(jiraBaseUrl, jiraEmail, jiraApiToken);
     engine.setJiraService(jiraService);
   }
 
-  const azure = settingsStore.get('azure', {}) as any;
-  if (azure.organization && azure.project && azure.pat) {
-    azureService = new AzureDevOpsService(azure.organization, azure.project, azure.pat);
-    azurePipelinesService = new AzurePipelinesService(azure.organization, azure.project, azure.pat);
+  const azureOrg = envStr('AXIS_AZURE_ORG');
+  const azureProject = envStr('AXIS_AZURE_PROJECT');
+  const azurePat = envStr('AXIS_AZURE_PAT');
+  if (azureOrg && azureProject && azurePat) {
+    azureService = new AzureDevOpsService(azureOrg, azureProject, azurePat);
+    azurePipelinesService = new AzurePipelinesService(azureOrg, azureProject, azurePat);
     engine.setAzureService(azureService);
     
     // Initialize and start run poller
-    if (!runPoller) {
-      runPoller = new RunPoller(getStorage());
-      runPoller.setPipelinesService(azurePipelinesService);
-      runPoller.setCorrelationEngine(engine);
-      runPoller.start();
-    }
+    runPoller = new RunPoller(getStorage());
+    runPoller.setPipelinesService(azurePipelinesService);
+    runPoller.setCorrelationEngine(engine);
+    runPoller.start();
   }
 
   // Initialize test discovery service
@@ -280,7 +298,9 @@ ipcMain.handle('jira:get-issue', async (_, issueKey: string) => {
 });
 
 ipcMain.handle('jira:search-issues', async (_, jql: string) => {
-  if (!jiraService) return [];
+  if (!jiraService) {
+    throw new Error('Jira service not configured');
+  }
   return await jiraService.searchIssues(jql);
 });
 
@@ -325,15 +345,62 @@ ipcMain.handle('jira:create-issue-from-draft', async (_, args: { draft: JiraDraf
       throw new Error('Jira service not configured');
     }
 
-    const { draft, fields } = args;
+    const { draft, fields } = args as any as {
+      draft: JiraDraft;
+      ctx?: FailureContext;
+      fields?: { projectKey: string; issueType?: string; priority?: string; assignee?: string; component?: string };
+      options?: { dedupe?: boolean; dedupeMode?: 'comment-existing' | 'return-existing' };
+    };
     
     if (!fields?.projectKey) {
       throw new Error('Project key is required');
     }
 
+    const issueTypeName = fields.issueType || 'Bug';
+
+    // Optional: dedupe (search open issues with fingerprint label)
+    const wantDedupe = (args as any)?.options?.dedupe !== false; // default on
+    const dedupeLabel = (draft as any)?.dedupeLabel as string | undefined;
+    const ctx = (args as any)?.ctx as FailureContext | undefined;
+
+    if (wantDedupe && dedupeLabel) {
+      const jql =
+        `project = ${fields.projectKey} AND labels = "${dedupeLabel}" AND statusCategory != Done ORDER BY created DESC`;
+      let matches: any[] = [];
+      try {
+        matches = await jiraService.searchIssues(jql);
+      } catch (e) {
+        // If search fails, don't block issue creation; proceed without dedupe.
+        matches = [];
+      }
+      if (matches.length > 0) {
+        const existing = matches[0];
+
+        // Best effort: add a comment with latest run/session evidence.
+        if ((args as any)?.options?.dedupeMode !== 'return-existing' && ctx) {
+          const commentLines: string[] = [];
+          commentLines.push('## Axis detected a repeat failure');
+          commentLines.push(`Time: ${new Date().toISOString()}`);
+          if (ctx.automate?.buildUrl) commentLines.push(`Build URL: ${ctx.automate.buildUrl}`);
+          if (ctx.automate?.sessionUrl) commentLines.push(`Session URL: ${ctx.automate.sessionUrl}`);
+          if (ctx.ado?.pipelineRunUrl) commentLines.push(`Pipeline Run: ${ctx.ado.pipelineRunUrl}`);
+          if (ctx.ado?.branch) commentLines.push(`Branch: ${ctx.ado.branch}`);
+          if (ctx.ado?.commit) commentLines.push(`Commit: ${ctx.ado.commit}`);
+          if (ctx.automate?.error?.message) commentLines.push(`Error: ${ctx.automate.error.message}`);
+          await jiraService.addComment(existing.key, commentLines.join('\n'));
+        }
+
+        return {
+          key: existing.key,
+          url: existing.url,
+          deduped: true,
+        };
+      }
+    }
+
     const issue = await jiraService.createIssue({
       projectKey: fields.projectKey,
-      issueType: fields.issueType || 'Bug',
+      issueType: issueTypeName,
       summary: draft.summary,
       description: draft.description,
       labels: draft.labels,
@@ -354,6 +421,31 @@ ipcMain.handle('jira:create-issue-from-draft', async (_, args: { draft: JiraDraf
     console.error('Failed to create issue from draft:', error);
     throw new Error(error.message || 'Failed to create Jira issue');
   }
+});
+
+ipcMain.handle('jira:get-project-issue-types', async (_, projectIdOrKey: string) => {
+  if (!jiraService) return [];
+  return await jiraService.getProjectIssueTypes(projectIdOrKey);
+});
+
+ipcMain.handle('jira:get-create-field-meta', async (_, projectIdOrKey: string, issueTypeId: string) => {
+  if (!jiraService) return null;
+  return await jiraService.getCreateFieldMeta(projectIdOrKey, issueTypeId);
+});
+
+ipcMain.handle('jira:add-comment', async (_, issueIdOrKey: string, body: any) => {
+  if (!jiraService) return;
+  await jiraService.addComment(issueIdOrKey, body);
+});
+
+ipcMain.handle('jira:link-issue', async (_, inwardKey: string, outwardKey: string, linkTypeName?: string) => {
+  if (!jiraService) return;
+  await jiraService.linkIssue(inwardKey, outwardKey, linkTypeName);
+});
+
+ipcMain.handle('jira:add-attachments', async (_, issueIdOrKey: string, filePaths: string[]) => {
+  if (!jiraService) return;
+  await jiraService.addAttachments(issueIdOrKey, filePaths);
 });
 
 // Correlation IPC handlers
@@ -396,42 +488,19 @@ ipcMain.handle('settings:get', async (_, key?: string) => {
 
 ipcMain.handle('settings:set', async (_, key: string, value: any) => {
   settingsStore.set(key, value);
-  // Reinitialize services if Azure settings changed
-  if (key === 'azure') {
-    const azure = value as any;
-    if (azure.organization && azure.project && azure.pat) {
-      azureService = new AzureDevOpsService(azure.organization, azure.project, azure.pat);
-      azurePipelinesService = new AzurePipelinesService(azure.organization, azure.project, azure.pat);
-      getCorrelationEngine().setAzureService(azureService);
-      
-      // Reinitialize run poller
-      if (runPoller) {
-        runPoller.stop();
-      }
-      runPoller = new RunPoller(getStorage());
-      runPoller.setPipelinesService(azurePipelinesService);
-      runPoller.setCorrelationEngine(getCorrelationEngine());
-      runPoller.start();
-    } else {
-      azureService = null;
-      azurePipelinesService = null;
-      if (runPoller) {
-        runPoller.stop();
-        runPoller = null;
-      }
-    }
-  }
-  // Reinitialize services if credentials changed
-  if (key.startsWith('browserstack.') || key.startsWith('jira.')) {
+  // Credentials come from `.env` only; any settings writes won't affect credentials/services.
+  // Still, reinitialize to ensure services are aligned with current environment.
+  if (key === 'azure' || key.startsWith('browserstack.') || key.startsWith('jira.')) {
     initializeServices();
   }
 });
 
 ipcMain.handle('settings:test-bs-automate', async () => {
-  const config = settingsStore.get('browserstack.automate', {}) as any;
-  if (!config.username || !config.accessKey) return false;
+  const username = envStr('AXIS_BROWSERSTACK_USERNAME');
+  const accessKey = envStr('AXIS_BROWSERSTACK_ACCESS_KEY');
+  if (!username || !accessKey) return false;
   try {
-    const service = new BrowserStackAutomateService(config.username, config.accessKey);
+    const service = new BrowserStackAutomateService(username, accessKey);
     const projects = await service.getProjects();
     return projects.length >= 0; // Even empty array means connection works
   } catch {
@@ -440,10 +509,11 @@ ipcMain.handle('settings:test-bs-automate', async () => {
 });
 
 ipcMain.handle('settings:test-bs-tm', async () => {
-  const config = settingsStore.get('browserstack.tm', {}) as any;
-  if (!config.username || !config.accessKey) return false;
+  const username = envStr('AXIS_BROWSERSTACK_USERNAME');
+  const accessKey = envStr('AXIS_BROWSERSTACK_ACCESS_KEY');
+  if (!username || !accessKey) return false;
   try {
-    const service = new BrowserStackTMService(config.username, config.accessKey);
+    const service = new BrowserStackTMService(username, accessKey);
     const projects = await service.getProjects();
     return projects.length >= 0;
   } catch {
@@ -452,10 +522,12 @@ ipcMain.handle('settings:test-bs-tm', async () => {
 });
 
 ipcMain.handle('settings:test-jira', async () => {
-  const config = settingsStore.get('jira', {}) as any;
-  if (!config.baseUrl || !config.email || !config.apiToken) return false;
+  const baseUrl = envStr('AXIS_JIRA_BASE_URL');
+  const email = envStr('AXIS_JIRA_EMAIL');
+  const apiToken = envStr('AXIS_JIRA_API_TOKEN');
+  if (!baseUrl || !email || !apiToken) return false;
   try {
-    const service = new JiraService(config.baseUrl, config.email, config.apiToken);
+    const service = new JiraService(baseUrl, email, apiToken);
     return await service.testConnection();
   } catch {
     return false;
@@ -463,10 +535,12 @@ ipcMain.handle('settings:test-jira', async () => {
 });
 
 ipcMain.handle('settings:test-azure', async () => {
-  const config = settingsStore.get('azure', {}) as any;
-  if (!config.organization || !config.project || !config.pat) return false;
+  const org = envStr('AXIS_AZURE_ORG');
+  const project = envStr('AXIS_AZURE_PROJECT');
+  const pat = envStr('AXIS_AZURE_PAT');
+  if (!org || !project || !pat) return false;
   try {
-    const service = new AzureDevOpsService(config.organization, config.project, config.pat);
+    const service = new AzureDevOpsService(org, project, pat);
     return await service.testConnection();
   } catch {
     return false;
@@ -582,19 +656,19 @@ ipcMain.handle('repo:create-template', async (_, repoRoot: string, templateId: s
 // Git operations
 ipcMain.handle('repo:clone', async (_, repoUrl: string, targetDir?: string, repoName?: string, repoId?: string) => {
   try {
-    // Get Azure PAT from settings for authentication
-    const azure = settingsStore.get('azure', {}) as any;
-    if (!azure.pat) {
-      throw new Error('Azure Personal Access Token not configured. Please set it in Settings.');
+    // Azure PAT comes from `.env`
+    const pat = envStr('AXIS_AZURE_PAT');
+    if (!pat) {
+      throw new Error('Azure Personal Access Token not configured. Please set AXIS_AZURE_PAT in your .env.');
     }
 
     // Build authenticated URL: https://PAT@dev.azure.com/org/project/_git/repo
     // Or for visualstudio.com: https://PAT@org.visualstudio.com/project/_git/repo
     let authenticatedUrl = repoUrl;
     if (repoUrl.includes('dev.azure.com')) {
-      authenticatedUrl = repoUrl.replace('https://', `https://${azure.pat}@`);
+      authenticatedUrl = repoUrl.replace('https://', `https://${pat}@`);
     } else if (repoUrl.includes('visualstudio.com')) {
-      authenticatedUrl = repoUrl.replace('https://', `https://${azure.pat}@`);
+      authenticatedUrl = repoUrl.replace('https://', `https://${pat}@`);
     }
 
     // Determine target path - use workspace if not specified
@@ -694,10 +768,36 @@ ipcMain.handle('repo:push', async (_, repoRoot: string, branch?: string, commitC
       console.warn('Pre-push warnings:', prePushCheck.warnings);
     }
 
-    // Check if there are commits to push
-    const { stdout: statusOut } = await execAsync('git status --porcelain --branch', { cwd: repoRoot });
-    const aheadMatch = statusOut.match(/\[ahead (\d+)\]/);
-    const aheadCount = aheadMatch ? parseInt(aheadMatch[1]) : 0;
+    // Detect whether this branch has an upstream. New local branches often don't,
+    // and "ahead" won't show up even though the branch hasn't been published yet.
+    let hasUpstream = true;
+    try {
+      await execAsync('git rev-parse --abbrev-ref --symbolic-full-name @{u}', { cwd: repoRoot });
+    } catch {
+      hasUpstream = false;
+    }
+
+    // Check if there are commits to push (only meaningful when upstream exists)
+    let aheadCount = 0;
+    if (hasUpstream) {
+      const { stdout: statusOut } = await execAsync('git status --porcelain --branch', { cwd: repoRoot });
+      const aheadMatch = statusOut.match(/\[ahead (\d+)\]/);
+      aheadCount = aheadMatch ? parseInt(aheadMatch[1]) : 0;
+    }
+
+    // If no upstream, push with -u to create the remote branch even if it's at the same commit as main.
+    if (!hasUpstream) {
+      const { stdout } = await execAsync('git push -u origin HEAD', {
+        cwd: repoRoot,
+        maxBuffer: 10 * 1024 * 1024,
+      });
+      return {
+        success: true,
+        message: 'Pushed branch and set upstream successfully',
+        output: stdout,
+        warnings: prePushCheck.warnings,
+      };
+    }
 
     if (aheadCount === 0) {
       return { success: false, error: 'Nothing to push. Your branch is up to date.' };
@@ -730,6 +830,10 @@ ipcMain.handle('repo:stage-file', async (_, repoRoot: string, filePath: string) 
   try {
     if (!fs.existsSync(path.join(repoRoot, '.git'))) {
       throw new Error('Not a git repository');
+    }
+
+    if (!filePath || typeof filePath !== 'string' || filePath.trim().length === 0) {
+      throw new Error('File path is required');
     }
 
     const { stdout } = await execAsync(`git add "${filePath}"`, { cwd: repoRoot });
@@ -825,10 +929,22 @@ ipcMain.handle('repo:commit', async (_, repoRoot: string, messageOrContext: stri
       return { success: false, error: 'No staged changes to commit. Please stage files first.' };
     }
 
+    // Use configured Git author/committer identity (so commits match the user's work account).
+    const azure = settingsStore.get('azure', {}) as any;
+    const authorName = typeof azure.gitAuthorName === 'string' ? azure.gitAuthorName.trim() : '';
+    const authorEmail = typeof azure.gitAuthorEmail === 'string' ? azure.gitAuthorEmail.trim() : '';
+
+    const env = {
+      ...process.env,
+      ...(authorName ? { GIT_AUTHOR_NAME: authorName, GIT_COMMITTER_NAME: authorName } : {}),
+      ...(authorEmail ? { GIT_AUTHOR_EMAIL: authorEmail, GIT_COMMITTER_EMAIL: authorEmail } : {}),
+    } as NodeJS.ProcessEnv;
+
     // Commit with message
     const { stdout, stderr } = await execAsync(`git commit -m "${commitMessage.replace(/"/g, '\\"')}"`, { 
       cwd: repoRoot,
       maxBuffer: 10 * 1024 * 1024,
+      env,
     });
 
     return { success: true, message: 'Committed successfully', output: stdout, commitContext };
@@ -1114,15 +1230,8 @@ ipcMain.handle('azure:parse-repo-url', async (_, url: string) => {
 
 ipcMain.handle('azure:test-connection', async () => {
   try {
-    if (!azureService) {
-      // Try to initialize from settings
-      const azure = settingsStore.get('azure', {}) as any;
-      if (azure.organization && azure.project && azure.pat) {
-        azureService = new AzureDevOpsService(azure.organization, azure.project, azure.pat);
-      } else {
-        return false;
-      }
-    }
+    if (!azureService) initializeServices();
+    if (!azureService) return false;
     return await azureService.testConnection();
   } catch {
     return false;
@@ -1131,14 +1240,8 @@ ipcMain.handle('azure:test-connection', async () => {
 
 ipcMain.handle('azure:get-repos', async () => {
   try {
-    if (!azureService) {
-      const azure = settingsStore.get('azure', {}) as any;
-      if (azure.organization && azure.project && azure.pat) {
-        azureService = new AzureDevOpsService(azure.organization, azure.project, azure.pat);
-      } else {
-        return [];
-      }
-    }
+    if (!azureService) initializeServices();
+    if (!azureService) return [];
     return await azureService.getRepositories();
   } catch (error) {
     console.error('Failed to get Azure repos:', error);
@@ -1148,14 +1251,8 @@ ipcMain.handle('azure:get-repos', async () => {
 
 ipcMain.handle('azure:get-repo-by-name', async (_, repoName: string) => {
   try {
-    if (!azureService) {
-      const azure = settingsStore.get('azure', {}) as any;
-      if (azure.organization && azure.project && azure.pat) {
-        azureService = new AzureDevOpsService(azure.organization, azure.project, azure.pat);
-      } else {
-        return null;
-      }
-    }
+    if (!azureService) initializeServices();
+    if (!azureService) return null;
     return await azureService.getRepositoryByName(repoName);
   } catch (error) {
     console.error('Failed to get Azure repo by name:', error);
@@ -1165,14 +1262,8 @@ ipcMain.handle('azure:get-repo-by-name', async (_, repoName: string) => {
 
 ipcMain.handle('azure:get-commits', async (_, repoId: string, branch: string, limit?: number) => {
   try {
-    if (!azureService) {
-      const azure = settingsStore.get('azure', {}) as any;
-      if (azure.organization && azure.project && azure.pat) {
-        azureService = new AzureDevOpsService(azure.organization, azure.project, azure.pat);
-      } else {
-        return [];
-      }
-    }
+    if (!azureService) initializeServices();
+    if (!azureService) return [];
     return await azureService.getCommits(repoId, branch, limit || 20);
   } catch (error) {
     console.error('Failed to get Azure commits:', error);
@@ -1182,14 +1273,8 @@ ipcMain.handle('azure:get-commits', async (_, repoId: string, branch: string, li
 
 ipcMain.handle('azure:get-commit', async (_, repoId: string, commitHash: string) => {
   try {
-    if (!azureService) {
-      const azure = settingsStore.get('azure', {}) as any;
-      if (azure.organization && azure.project && azure.pat) {
-        azureService = new AzureDevOpsService(azure.organization, azure.project, azure.pat);
-      } else {
-        return null;
-      }
-    }
+    if (!azureService) initializeServices();
+    if (!azureService) return null;
     return await azureService.getCommitByHash(repoId, commitHash);
   } catch (error) {
     console.error('Failed to get Azure commit:', error);
@@ -1199,14 +1284,8 @@ ipcMain.handle('azure:get-commit', async (_, repoId: string, commitHash: string)
 
 ipcMain.handle('azure:get-branch-info', async (_, repoId: string, branch: string) => {
   try {
-    if (!azureService) {
-      const azure = settingsStore.get('azure', {}) as any;
-      if (azure.organization && azure.project && azure.pat) {
-        azureService = new AzureDevOpsService(azure.organization, azure.project, azure.pat);
-      } else {
-        return null;
-      }
-    }
+    if (!azureService) initializeServices();
+    if (!azureService) return null;
     return await azureService.getBranchInfo(repoId, branch);
   } catch (error) {
     console.error('Failed to get Azure branch info:', error);
@@ -1251,14 +1330,8 @@ ipcMain.handle('repo:read-file', async (_, repoRoot: string, filePath: string) =
 // Azure Pipelines IPC handlers
 ipcMain.handle('azurePipelines:list', async () => {
   try {
-    if (!azurePipelinesService) {
-      const azure = settingsStore.get('azure', {}) as any;
-      if (azure.organization && azure.project && azure.pat) {
-        azurePipelinesService = new AzurePipelinesService(azure.organization, azure.project, azure.pat);
-      } else {
-        return [];
-      }
-    }
+    if (!azurePipelinesService) initializeServices();
+    if (!azurePipelinesService) return [];
     return await azurePipelinesService.listPipelines();
   } catch (error) {
     console.error('Failed to list pipelines:', error);
@@ -1268,14 +1341,8 @@ ipcMain.handle('azurePipelines:list', async () => {
 
 ipcMain.handle('azurePipelines:getPipeline', async (_, pipelineId: number) => {
   try {
-    if (!azurePipelinesService) {
-      const azure = settingsStore.get('azure', {}) as any;
-      if (azure.organization && azure.project && azure.pat) {
-        azurePipelinesService = new AzurePipelinesService(azure.organization, azure.project, azure.pat);
-      } else {
-        return null;
-      }
-    }
+    if (!azurePipelinesService) initializeServices();
+    if (!azurePipelinesService) return null;
     return await azurePipelinesService.getPipeline(pipelineId);
   } catch (error) {
     console.error('Failed to get pipeline:', error);
@@ -1285,14 +1352,8 @@ ipcMain.handle('azurePipelines:getPipeline', async (_, pipelineId: number) => {
 
 ipcMain.handle('azurePipelines:run', async (_, pipelineId: number, refName: string, runParams: any) => {
   try {
-    if (!azurePipelinesService) {
-      const azure = settingsStore.get('azure', {}) as any;
-      if (azure.organization && azure.project && azure.pat) {
-        azurePipelinesService = new AzurePipelinesService(azure.organization, azure.project, azure.pat);
-      } else {
-        throw new Error('Azure Pipelines service not configured');
-      }
-    }
+    if (!azurePipelinesService) initializeServices();
+    if (!azurePipelinesService) throw new Error('Azure Pipelines service not configured (.env missing AXIS_AZURE_* credentials)');
 
     // Run the pipeline
     const run = await azurePipelinesService.runPipeline(pipelineId, refName, runParams);
@@ -1335,14 +1396,8 @@ ipcMain.handle('azurePipelines:run', async (_, pipelineId: number, refName: stri
 
 ipcMain.handle('azurePipelines:getRun', async (_, pipelineId: number, runId: number) => {
   try {
-    if (!azurePipelinesService) {
-      const azure = settingsStore.get('azure', {}) as any;
-      if (azure.organization && azure.project && azure.pat) {
-        azurePipelinesService = new AzurePipelinesService(azure.organization, azure.project, azure.pat);
-      } else {
-        return null;
-      }
-    }
+    if (!azurePipelinesService) initializeServices();
+    if (!azurePipelinesService) return null;
     return await azurePipelinesService.getRun(pipelineId, runId);
   } catch (error) {
     console.error('Failed to get pipeline run:', error);
@@ -1352,14 +1407,8 @@ ipcMain.handle('azurePipelines:getRun', async (_, pipelineId: number, runId: num
 
 ipcMain.handle('azurePipelines:listRuns', async (_, pipelineId?: number, filters?: any) => {
   try {
-    if (!azurePipelinesService) {
-      const azure = settingsStore.get('azure', {}) as any;
-      if (azure.organization && azure.project && azure.pat) {
-        azurePipelinesService = new AzurePipelinesService(azure.organization, azure.project, azure.pat);
-      } else {
-        return [];
-      }
-    }
+    if (!azurePipelinesService) initializeServices();
+    if (!azurePipelinesService) return [];
     return await azurePipelinesService.listRuns(pipelineId, filters);
   } catch (error) {
     console.error('Failed to list pipeline runs:', error);
@@ -1469,5 +1518,46 @@ ipcMain.handle('updater:install', () => {
 
 ipcMain.handle('app:getVersion', () => {
   return app.getVersion();
+});
+
+// POM Browser IPC handlers
+ipcMain.handle('pom:resolve-default-root', async (_evt, repoRoot: string) => {
+  return pomService.resolveDefaultPomRoot(repoRoot);
+});
+
+ipcMain.handle('pom:list-subfolders', async (_evt, repoRoot: string) => {
+  return pomService.listPomSubfolders(repoRoot);
+});
+
+ipcMain.handle('pom:list-files', async (_evt, pomRoot: string) => {
+  return pomService.listPomFiles(pomRoot);
+});
+
+ipcMain.handle('pom:scan', async (_evt, pomRoot: string) => {
+  return pomService.scanPomFolder(pomRoot);
+});
+
+ipcMain.handle('pom:list-workspace-repos', async () => {
+  try {
+    const workspaceService = new WorkspaceService();
+    const workspaceRoot = workspaceService.ensureRootExists();
+    const entries = fs.readdirSync(workspaceRoot, { withFileTypes: true });
+    const repos = entries
+      .filter((e) => e.isDirectory())
+      .map((e) => {
+        const repoPath = path.join(workspaceRoot, e.name);
+        const pagesPath = path.join(repoPath, 'pages');
+        const webStorePath = path.join(pagesPath, 'web_store');
+        const hasPages = fs.existsSync(pagesPath) && fs.statSync(pagesPath).isDirectory();
+        const hasWebStore = fs.existsSync(webStorePath) && fs.statSync(webStorePath).isDirectory();
+        return { name: e.name, path: repoPath, hasPages, hasWebStore };
+      })
+      .filter((r) => r.hasPages)
+      .sort((a, b) => a.name.localeCompare(b.name));
+    return { workspaceRoot, repos };
+  } catch (error) {
+    console.error('Failed to list workspace repos for POM:', error);
+    return { workspaceRoot: null, repos: [] };
+  }
 });
 

@@ -1,9 +1,12 @@
 import { app, BrowserWindow } from 'electron';
 import * as path from 'path';
 import { WorkspaceService } from './services/workspace';
+import { loadAxisEnv } from './env';
 
 // Initialize IPC handlers (StorageService is lazy)
 try {
+  // Load `.env` before anything else so services can read credentials from process.env.
+  loadAxisEnv();
   require('./bridge');
   console.log('[Electron] Bridge loaded successfully');
 } catch (error) {
@@ -63,7 +66,9 @@ function createWindow() {
     });
   } else {
     // In production, load from built files
-    const htmlPath = path.join(__dirname, '../renderer/index.html');
+    // NOTE: In packaged builds, __dirname is inside `dist/main/main`, so relative paths can be tricky.
+    // Use app.getAppPath() (points to the asar root) and load the renderer from dist/renderer.
+    const htmlPath = path.join(app.getAppPath(), 'dist', 'renderer', 'index.html');
     console.log('[Electron] Loading from file:', htmlPath);
     mainWindow.loadFile(htmlPath);
   }
