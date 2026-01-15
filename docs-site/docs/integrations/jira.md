@@ -71,6 +71,7 @@ But this is optional — you can ship without it.
 
 In your main process, create a normalized object that everything maps into.
 
+```typescript
 type FailureContext = {
   source: "automate" | "tm";
   createdAt: string; // ISO
@@ -126,6 +127,7 @@ type FailureContext = {
     commit?: string;
   };
 };
+```
 
 
 This is the “truth object”. Jira is just one output format of it.

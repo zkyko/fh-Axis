@@ -44,7 +44,7 @@ Represents a logical execution run.
 
 - environment (optional)
 
-- externalLinks { browserstackRunUrl?, adoBuildUrl? }
+- externalLinks: `{ browserstackRunUrl?, adoBuildUrl? }`
 
 ### TestResult
 
@@ -62,7 +62,7 @@ Represents a logical execution run.
 
 - errorSignature (hash)
 
-- metadata { tags?, filePath?, tmCaseId? }
+- metadata: `{ tags?, filePath?, tmCaseId? }`
 
 ### Session (Automate)
 
@@ -78,7 +78,7 @@ Represents a logical execution run.
 
 - browser/caps
 
-- links { video, console, network, logs, bsSessionUrl }
+- links: `{ video, console, network, logs, bsSessionUrl }`
 
 ### TestCase (TM)
 
