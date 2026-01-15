@@ -2,13 +2,13 @@
 
 ## Overview
 
-Axis provides a structured workflow for creating Jira defects from test failures. The workflow ensures that every defect includes relevant evidence and context.
+QA Hub provides a structured workflow for creating Jira defects from test failures. The workflow ensures that every defect includes relevant evidence and context.
 
 ## Workflow Steps
 
 ### 1. Failure Context
 
-When a test fails, Axis builds a **FailureContext** that includes:
+When a test fails, QA Hub builds a **FailureContext** that includes:
 
 - **Test information** - Test name, project, run details
 - **Execution evidence** - BrowserStack session links, artifacts (videos, logs, screenshots)

@@ -1,4 +1,4 @@
-# Azure DevOps Pipeline for Axis
+# Azure DevOps Pipeline for QA Hub
 # Builds Windows installer and publishes as artifact
 
 trigger:
@@ -38,7 +38,7 @@ steps:
   - task: PublishBuildArtifacts@1
     inputs:
       pathToPublish: '$(System.DefaultWorkingDirectory)/release'
-      artifactName: 'Axis-Installer'
+      artifactName: 'QA-Hub-Installer'
       publishLocation: 'Container'
     displayName: 'Publish installer artifact'
 

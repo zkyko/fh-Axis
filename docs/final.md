@@ -1,4 +1,4 @@
-# Axis Implementation Prompt for Cursor
+# QA Hub Implementation Prompt for Cursor
 **Goal:** Implement the next 3 foundational deliverables **now**:
 1) **Electron auto-updater (Phase 1: updater-ready without hosting yet)**
 2) **Docusaurus docs website (public docs, private source)**
@@ -11,11 +11,11 @@ This keeps the POC private, minimizes dependencies on other teams, and prepares 
 ## Why we’re doing this
 
 ### Electron Auto-Updater (Why)
-Axis will be shipped as an internal desktop tool with version control. Users should never “reinstall manually.” We want:
+QA Hub will be shipped as an internal desktop tool with version control. Users should never “reinstall manually.” We want:
 - **Check for updates**
 - **Download**
 - **Restart to install**
-This makes Axis feel like a real product and reduces support burden.
+This makes QA Hub feel like a real product and reduces support burden.
 
 **Important constraint:** We do NOT have Azure Blob/static hosting yet.  
 So in Phase 1 we implement updater plumbing + UI + build packaging. Updates will be “ready,” but the feed URL will be a placeholder until hosting exists.
@@ -35,7 +35,7 @@ Docusaurus gives:
 
 ### Azure DevOps Pipeline (Why)
 Even without hosting, we need consistent builds:
-- generate `Axis Setup.exe` via CI
+- generate `QA Hub Setup.exe` via CI
 - publish it as a pipeline artifact
 This provides reliable versioned installers and creates the foundation for later publishing to Blob.
 
@@ -50,7 +50,7 @@ This provides reliable versioned installers and creates the foundation for later
 - Add Settings UI section to control updates
 - Do **NOT** auto-download updates on start (user-triggered only)
 - Use **generic provider** with a placeholder URL for now:
-  - `https://example.com/axis-updates` (TODO: replace later with Azure Blob static site URL)
+  - `https://example.com/qa-hub-updates` (TODO: replace later with Azure Blob static site URL)
 
 ### Implementation tasks
 
@@ -111,13 +111,13 @@ Update `package.json` (or `electron-builder.yml`) to include publish:
 
 ```json
 "build": {
-  "appId": "com.fourhands.axis",
-  "productName": "Axis",
+  "appId": "com.fourhands.qahub",
+  "productName": "QA Hub",
   "win": { "target": "nsis" },
   "publish": [
     {
       "provider": "generic",
-      "url": "https://example.com/axis-updates"
+      "url": "https://example.com/qa-hub-updates"
     }
   ]
 }
@@ -125,7 +125,7 @@ NOTE: This URL is placeholder until we get Azure Blob (Phase 2).
 App must handle “cannot reach feed” gracefully (show message, no crash).
 
 Acceptance criteria
-Axis launches normally
+QA Hub launches normally
 
 Settings shows version + updater controls
 
@@ -133,7 +133,7 @@ Clicking “Check for updates” triggers updater events (even if feed unreachab
 
 No crashes when feed is unreachable
 
-Packaging produces an NSIS installer (Axis Setup.exe)
+Packaging produces an NSIS installer (QA Hub Setup.exe)
 
 Deliverable 2: Docusaurus Docs Website
 Requirements
@@ -143,7 +143,7 @@ For now, generate the Docusaurus scaffold with starter pages
 
 Docs must explain:
 
-what Axis is
+what QA Hub is
 
 architecture (main/renderer/services)
 
@@ -170,7 +170,7 @@ Create the following pages:
 
 docs/intro.md
 
-What Axis is (structured QA workflow tool)
+What QA Hub is (structured QA workflow tool)
 
 What it integrates with (BrowserStack Automate, TM, Jira, ADO)
 

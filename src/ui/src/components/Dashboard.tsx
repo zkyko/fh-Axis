@@ -124,7 +124,7 @@ const Dashboard: React.FC = () => {
             <Activity size={32} className="text-primary" />
           </div>
           <div>
-            <h2 className="text-2xl font-bold text-base-content">Axis</h2>
+            <h2 className="text-2xl font-bold text-base-content">QA Hub</h2>
             <p className="text-base-content/70 mt-1">
               Unified view of test execution, failures, and defect tracking
             </p>

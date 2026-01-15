@@ -2,7 +2,7 @@
 
 ## High-Level Architecture
 
-Axis is built as an **Electron application** with clear boundaries between the renderer (UI) and main process (backend).
+QA Hub is built as an **Electron application** with clear boundaries between the renderer (UI) and main process (backend).
 
 ## Process Separation
 
@@ -31,7 +31,7 @@ The main process contains:
 
 ### Storage
 
-Axis uses two storage mechanisms:
+QA Hub uses two storage mechanisms:
 
 1. **SQLite Database** (`better-sqlite3`)
    - Local repository paths

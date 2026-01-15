@@ -54,7 +54,7 @@ export function loadAxisEnv(): void {
     }
   } catch (e) {
     // Never crash the app for env loading issues.
-    console.warn('[Axis] Failed to load .env:', e);
+    console.warn('[QA Hub] Failed to load .env:', e);
   }
 }
 

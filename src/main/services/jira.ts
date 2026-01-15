@@ -1,4 +1,6 @@
 import axios, { AxiosInstance } from 'axios';
+import * as fs from 'fs';
+import * as path from 'path';
 
 export interface JiraIssue {
   key: string;
@@ -271,6 +273,107 @@ export class JiraService {
     } catch (error) {
       console.error('Failed to link test result to Jira issue:', error);
       throw error;
+    }
+  }
+
+  /**
+   * Add a comment to an issue.
+   * Accepts either a plain text string or a Jira ADF document payload.
+   */
+  async addComment(issueIdOrKey: string, body: any): Promise<void> {
+    try {
+      const adf =
+        typeof body === 'string'
+          ? this.convertPlainTextToADF(body)
+          : body && typeof body === 'object' && body.type === 'doc'
+            ? body
+            : this.convertPlainTextToADF(String(body ?? ''));
+
+      await this.client.post(`/issue/${issueIdOrKey}/comment`, { body: adf });
+    } catch (error) {
+      console.error('Failed to add comment:', error);
+    }
+  }
+
+  /**
+   * Link two issues (defaults to "Relates").
+   */
+  async linkIssue(inwardKey: string, outwardKey: string, linkTypeName: string = 'Relates'): Promise<void> {
+    try {
+      await this.client.post('/issueLink', {
+        type: { name: linkTypeName },
+        inwardIssue: { key: inwardKey },
+        outwardIssue: { key: outwardKey },
+      });
+    } catch (error) {
+      console.error('Failed to link issue:', error);
+    }
+  }
+
+  /**
+   * Fetch issue types available for a project.
+   */
+  async getProjectIssueTypes(projectIdOrKey: string): Promise<Array<{ id: string; name: string }>> {
+    try {
+      const resp = await this.client.get(`/project/${projectIdOrKey}`);
+      const issueTypes = Array.isArray(resp.data?.issueTypes) ? resp.data.issueTypes : [];
+      return issueTypes.map((t: any) => ({ id: String(t.id), name: String(t.name) }));
+    } catch (error) {
+      console.error('Failed to get project issue types:', error);
+      return [];
+    }
+  }
+
+  /**
+   * Fetch create-issue field metadata for a project + issue type.
+   */
+  async getCreateFieldMeta(projectIdOrKey: string, issueTypeId: string): Promise<any> {
+    try {
+      const resp = await this.client.get('/issue/createmeta', {
+        params: {
+          projectKeys: projectIdOrKey,
+          issuetypeIds: issueTypeId,
+          expand: 'projects.issuetypes.fields',
+        },
+      });
+      return resp.data;
+    } catch (error) {
+      console.error('Failed to get create field meta:', error);
+      return null;
+    }
+  }
+
+  /**
+   * Add attachments to an issue (best effort).
+   * Uses Jira's attachments endpoint which requires `X-Atlassian-Token: no-check`.
+   */
+  async addAttachments(issueIdOrKey: string, filePaths: string[]): Promise<void> {
+    try {
+      if (!Array.isArray(filePaths) || filePaths.length === 0) return;
+
+      const url = `${this.baseUrl}/rest/api/3/issue/${issueIdOrKey}/attachments`;
+      const auth = Buffer.from(`${this.email}:${this.apiToken}`).toString('base64');
+
+      const form = new FormData();
+      for (const fp of filePaths) {
+        if (!fp) continue;
+        const abs = path.resolve(fp);
+        if (!fs.existsSync(abs)) continue;
+        const filename = path.basename(abs);
+        const buf = fs.readFileSync(abs);
+        form.append('file', new Blob([buf]), filename);
+      }
+
+      await fetch(url, {
+        method: 'POST',
+        headers: {
+          Authorization: `Basic ${auth}`,
+          'X-Atlassian-Token': 'no-check',
+        },
+        body: form,
+      });
+    } catch (error) {
+      console.error('Failed to add attachments:', error);
     }
   }
 }

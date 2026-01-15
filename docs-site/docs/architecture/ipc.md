@@ -2,7 +2,7 @@
 
 ## Overview
 
-Axis uses **IPC (Inter-Process Communication)** to enable secure communication between the renderer (UI) and main process (backend). All IPC channels are explicitly defined and type-safe.
+QA Hub uses **IPC (Inter-Process Communication)** to enable secure communication between the renderer (UI) and main process (backend). All IPC channels are explicitly defined and type-safe.
 
 ## IPC Channels
 

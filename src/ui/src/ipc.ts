@@ -1,5 +1,5 @@
 /**
- * Type-safe IPC wrapper for Axis
+ * Type-safe IPC wrapper for QA Hub
  */
 import { getBackend } from './ipc-backend';
 

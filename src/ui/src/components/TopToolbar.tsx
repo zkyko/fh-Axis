@@ -17,7 +17,7 @@ const TopToolbar: React.FC = () => {
     if (path.startsWith('/repo')) return 'Repo Companion';
     if (path.startsWith('/settings')) return 'Settings';
     if (path.startsWith('/diagnostics')) return 'Diagnostics';
-    return 'Axis';
+    return 'QA Hub';
   };
 
   return (

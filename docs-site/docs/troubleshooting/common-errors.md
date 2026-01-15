@@ -11,7 +11,7 @@ When checking for updates in Settings → Updates, you see an error message like
 
 ### Cause
 
-The update feed URL is currently a placeholder (`https://example.com/axis-updates`). This is expected in Phase 1 of the updater implementation.
+The update feed URL is currently a placeholder (`https://example.com/qa-hub-updates`). This is expected in Phase 1 of the updater implementation.
 
 ### Solution
 
@@ -48,7 +48,7 @@ Once Azure Blob hosting is configured, the feed URL will be updated in `electron
 
 ### Common Issues
 
-- **Hardcoded credentials**: Axis uses hardcoded test credentials by default. For production, update these in Settings.
+- **Credentials**: QA Hub reads credentials from your local `.env` file. Verify the required `AXIS_*` keys are set correctly.
 - **API limits**: BrowserStack has rate limits. If you hit limits, wait a few minutes and try again.
 
 ## Jira Create Failures
@@ -169,7 +169,7 @@ Once Azure Blob hosting is configured, the feed URL will be updated in `electron
 
 ### Check Logs
 
-Axis logs important events to the console. To view logs:
+QA Hub logs important events to the console. To view logs:
 
 1. **Development mode**: Check the terminal/console where you ran `npm run dev`
 2. **Production mode**: Check the application logs (location depends on OS)
@@ -178,26 +178,26 @@ Axis logs important events to the console. To view logs:
 
 If configuration seems corrupted:
 
-1. Close Axis
+1. Close QA Hub
 2. Clear settings (location depends on OS):
    - **Windows**: `%APPDATA%\axis\`
    - **macOS**: `~/Library/Application Support/axis/`
    - **Linux**: `~/.config/axis/`
-3. Restart Axis and reconfigure
+3. Restart QA Hub and reconfigure
 
 ### Network Issues
 
 If you're experiencing network-related errors:
 
 1. **Check internet connection**
-2. **Verify firewall settings** - Ensure Axis can make outbound connections
+2. **Verify firewall settings** - Ensure QA Hub can make outbound connections
 3. **Check proxy settings** - If behind a corporate proxy, you may need to configure it
 4. **Verify API endpoints are accessible** - BrowserStack, Jira, Azure DevOps APIs should be accessible
 
 ### Still Having Issues?
 
-1. Check the [Architecture Overview](./architecture/overview.md) to understand how Axis works
+1. Check the [Architecture Overview](./architecture/overview.md) to understand how QA Hub works
 2. Review the [IPC Contract](./architecture/ipc.md) to understand communication flow
 3. Check existing documentation for your specific use case
-4. Contact your team's Axis administrator
+4. Contact your team's QA Hub administrator
 

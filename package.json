@@ -1,8 +1,8 @@
 {
-  "name": "axis",
+  "name": "qa-hub",
   "version": "1.0.0",
   "description": "Unified test execution, failure analysis, and defect tracking",
-  "productName": "Axis",
+  "productName": "QA Hub",
   "main": "dist/main/index.js",
   "scripts": {
     "dev": "npm run build:main && concurrently -k \"npm run dev:ui\" \"npm run dev:main\" \"npm run dev:electron\"",

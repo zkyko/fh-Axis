@@ -13,7 +13,7 @@ interface BuildFailureContextOptions {
 
 /**
  * Parse correlation key from build name
- * Format: Axis|adoRun=<ID>|repo=<NAME>|branch=<BRANCH>
+ * Format: QA Hub|adoRun=<ID>|repo=<NAME>|branch=<BRANCH>
  * Tolerant parsing - handles variations
  */
 function parseCorrelationKey(buildName: string): {
@@ -24,8 +24,8 @@ function parseCorrelationKey(buildName: string): {
   const result: { adoRunId?: string; repo?: string; branch?: string } = {};
 
   try {
-    // Look for pattern: Axis|adoRun=<ID>|repo=<NAME>|branch=<BRANCH>
-    // Also handle variations like: Axis | adoRun = <ID> | repo = <NAME>
+    // Look for pattern: QA Hub|adoRun=<ID>|repo=<NAME>|branch=<BRANCH>
+    // Also handle variations like: QA Hub | adoRun = <ID> | repo = <NAME>
     const patterns = [
       /adoRun[=:]\s*([^|]+)/i,
       /repo[=:]\s*([^|]+)/i,

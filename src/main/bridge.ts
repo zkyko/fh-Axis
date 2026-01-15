@@ -379,7 +379,7 @@ ipcMain.handle('jira:create-issue-from-draft', async (_, args: { draft: JiraDraf
         // Best effort: add a comment with latest run/session evidence.
         if ((args as any)?.options?.dedupeMode !== 'return-existing' && ctx) {
           const commentLines: string[] = [];
-          commentLines.push('## Axis detected a repeat failure');
+          commentLines.push('## QA Hub detected a repeat failure');
           commentLines.push(`Time: ${new Date().toISOString()}`);
           if (ctx.automate?.buildUrl) commentLines.push(`Build URL: ${ctx.automate.buildUrl}`);
           if (ctx.automate?.sessionUrl) commentLines.push(`Session URL: ${ctx.automate.sessionUrl}`);

@@ -1,6 +1,6 @@
 # Docusaurus Documentation Setup
 
-This directory contains the public documentation for Axis.
+This directory contains the public documentation for QA Hub.
 
 ## Setup Instructions
 
@@ -18,7 +18,7 @@ This will scaffold the Docusaurus site with the classic template.
 
 After scaffolding, add the documentation markdown files to the `docs/` directory. The documentation structure is:
 
-- `docs/intro.md` - What Axis is
+- `docs/intro.md` - What QA Hub is
 - `docs/architecture/overview.md` - Architecture overview
 - `docs/architecture/ipc.md` - IPC contract documentation
 - `docs/workflows/jira-bug-creation.md` - Jira workflow

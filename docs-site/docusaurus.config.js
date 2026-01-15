@@ -7,7 +7,7 @@ const darkCodeTheme = themes.dracula;
 
 /** @type {import('@docusaurus/types').Config} */
 const config = {
-  title: 'Axis Documentation',
+  title: 'QA Hub Documentation',
   tagline: 'Unified test execution, failure analysis, and defect tracking',
   favicon: 'img/favicon.ico',
 
@@ -48,9 +48,9 @@ const config = {
     /** @type {import('@docusaurus/preset-classic').ThemeConfig} */
     ({
       navbar: {
-        title: 'Axis',
+        title: 'QA Hub',
         logo: {
-          alt: 'Axis Logo',
+          alt: 'QA Hub Logo',
           src: 'img/logo.svg',
         },
         items: [],

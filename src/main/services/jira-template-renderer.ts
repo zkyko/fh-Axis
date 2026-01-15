@@ -173,7 +173,7 @@ export function renderDraft(
   const description = sections.join('\n').trim();
 
   // Generate labels
-  const labels: string[] = ['axis', 'automation'];
+  const labels: string[] = ['qa-hub', 'automation'];
   if (ctx.automate) {
     labels.push('browserstack');
   }

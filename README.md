@@ -1,10 +1,10 @@
-# Axis
+# QA Hub
 
 **Unified test execution, failure analysis, and defect tracking** — a desktop application for QA + Dev teams to triage failures, correlate evidence, and manage workflow.
 
 ## What it is
 
-Axis is an Electron desktop app that:
+QA Hub is an Electron desktop app that:
 
 - Pulls **Builds/Sessions** from **BrowserStack Automate**
 

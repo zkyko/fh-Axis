@@ -4,11 +4,11 @@ slug: /
 
 # Introduction
 
-## What is Axis?
+## What is QA Hub?
 
-Axis is a desktop application that provides **unified test execution, failure analysis, and defect tracking** for QA and Development teams. It helps teams triage failures, correlate evidence, and manage workflows across multiple tools.
+QA Hub is a desktop application that provides **unified test execution, failure analysis, and defect tracking** for QA and Development teams. It helps teams triage failures, correlate evidence, and manage workflows across multiple tools.
 
-Axis is an Electron desktop application that serves as a central hub for:
+QA Hub is an Electron desktop application that serves as a central hub for:
 
 - **BrowserStack Automate** - View builds, sessions, and execution evidence
 - **BrowserStack Test Management (TM)** - Manage test cases, runs, and results
@@ -17,7 +17,7 @@ Axis is an Electron desktop application that serves as a central hub for:
 
 ## Key Capabilities
 
-Axis provides a structured workflow for QA teams:
+QA Hub provides a structured workflow for QA teams:
 
 1. **View test executions** from BrowserStack Automate
 2. **Manage test cases and runs** from BrowserStack Test Management
@@ -27,18 +27,18 @@ Axis provides a structured workflow for QA teams:
 
 ## Core Philosophy
 
-Axis is designed to **force structure in QA workflows**. Rather than just running tests, Axis enforces a structured approach: **understand failures → capture evidence → create actionable defects**. This ensures every test failure is properly analyzed, documented, and tracked through to resolution.
+QA Hub is designed to **force structure in QA workflows**. Rather than just running tests, QA Hub enforces a structured approach: **understand failures → capture evidence → create actionable defects**. This ensures every test failure is properly analyzed, documented, and tracked through to resolution.
 
-## What Axis Does NOT Do
+## What QA Hub Does NOT Do
 
-It's important to understand what Axis is **not**:
+It's important to understand what QA Hub is **not**:
 
-- ❌ **Not a test runner** - Axis does not execute tests locally
-- ❌ **Not a Playwright wrapper** - Axis does not wrap or generate Playwright code
-- ❌ **Not a CI trigger system** - Axis focuses on triage and workflow management
+- ❌ **Not a test runner** - QA Hub does not execute tests locally
+- ❌ **Not a Playwright wrapper** - QA Hub does not wrap or generate Playwright code
+- ❌ **Not a CI trigger system** - QA Hub focuses on triage and workflow management
 - ❌ **Not a complete replacement** for BrowserStack UI when API gaps exist
 
-**Execution remains in CI + BrowserStack.** Axis is a **triage and workflow management tool**, not an execution platform.
+**Execution remains in CI + BrowserStack.** QA Hub is a **triage and workflow management tool**, not an execution platform.
 
 ## Integrations
 
@@ -70,7 +70,7 @@ It's important to understand what Axis is **not**:
 
 ## Workflows
 
-Axis supports the following key workflows:
+QA Hub supports the following key workflows:
 
 1. **Repo Companion → Automate → TM → Jira** - The complete workflow from test creation to defect tracking
 2. **Failure Analysis** - View execution evidence, correlate with code changes, and create actionable defects
