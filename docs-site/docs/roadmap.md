@@ -29,7 +29,7 @@
 
 ## 🚧 In Progress / Planned
 
-## Phase 0: Foundation (Week 1)
+## Phase 0: Foundation
 
 - Electron app scaffold (main/renderer)
 
@@ -39,7 +39,7 @@
 
 - HTTP client layer + logging
 
-## Phase 1: BrowserStack Read (Weeks 2–3)
+## Phase 1: BrowserStack Read
 
 - Automate: builds/sessions/details
 
@@ -47,7 +47,7 @@
 
 - Failure detail page with evidence links
 
-## Phase 2: Jira Workflow (Weeks 3–4)
+## Phase 2: Jira Workflow
 
 - search/create/link issue
 
@@ -55,7 +55,7 @@
 
 - audit log
 
-## Phase 3: Repo Companion (Weeks 4–5) ✅ COMPLETED
+## Phase 3: Repo Companion ✅ COMPLETED
 
 - ✅ detect repo (auto-detection on startup)
 - ✅ git status + detailed file tracking (staged/unstaged/untracked)
@@ -68,7 +68,7 @@
 - ⏳ templates for new test files (planned)
 - ⏳ QA-only role enforcement (planned)
 
-## Phase 4: Correlation + Intelligence (Weeks 6+)
+## Phase 4: Correlation + Intelligence
 
 - signature clustering
 
