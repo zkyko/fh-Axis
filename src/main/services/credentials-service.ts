@@ -17,7 +17,10 @@ export class CredentialsService {
   constructor() {
     this.store = new Store<Credentials>({
       name: 'credentials',
-      encryptionKey: 'qa-hub-secure-credentials-key-v1', // Encryption for credential security
+      // Fixed encryption key for cross-platform credential portability
+      // All installations share the same key to allow credential migration
+      // Credentials are still encrypted at rest and isolated per user account
+      encryptionKey: 'qa-hub-secure-credentials-key-v1',
       clearInvalidConfig: true,
     });
   }

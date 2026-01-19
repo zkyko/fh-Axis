@@ -178,7 +178,7 @@ export const ipc = {
       const backend = getBackend();
       return backend?.['credentials:has-credentials'](service) || Promise.resolve(false);
     },
-    save: (credentials: any): Promise<{ success: boolean; error?: string }> => {
+    save: (credentials: Partial<Record<string, string | undefined>>): Promise<{ success: boolean; error?: string }> => {
       const backend = getBackend();
       return backend?.['credentials:save'](credentials) || Promise.resolve({ success: false, error: 'Backend not available' });
     },

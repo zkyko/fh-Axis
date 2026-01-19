@@ -50,7 +50,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
   // Credentials
   'credentials:get-masked': () => ipcRenderer.invoke('credentials:get-masked'),
   'credentials:has-credentials': (service: 'browserstack' | 'jira' | 'azure') => ipcRenderer.invoke('credentials:has-credentials', service),
-  'credentials:save': (credentials: any) => ipcRenderer.invoke('credentials:save', credentials),
+  'credentials:save': (credentials: Partial<Record<string, string | undefined>>) => ipcRenderer.invoke('credentials:save', credentials),
   'credentials:clear': () => ipcRenderer.invoke('credentials:clear'),
 
   // Azure DevOps

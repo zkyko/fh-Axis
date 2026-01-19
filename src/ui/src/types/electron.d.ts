@@ -51,7 +51,7 @@ export interface ElectronAPI {
   // Credentials
   'credentials:get-masked': () => Promise<Record<string, { value: string; masked: string; exists: boolean }>>;
   'credentials:has-credentials': (service: 'browserstack' | 'jira' | 'azure') => Promise<boolean>;
-  'credentials:save': (credentials: any) => Promise<{ success: boolean; error?: string }>;
+  'credentials:save': (credentials: Partial<Record<string, string | undefined>>) => Promise<{ success: boolean; error?: string }>;
   'credentials:clear': () => Promise<{ success: boolean; error?: string }>;
 
   // Azure DevOps
