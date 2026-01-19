@@ -48,6 +48,12 @@ export interface ElectronAPI {
   'settings:test-jira': () => Promise<boolean>;
   'settings:test-azure': () => Promise<boolean>;
 
+  // Credentials
+  'credentials:get-masked': () => Promise<Record<string, { value: string; masked: string; exists: boolean }>>;
+  'credentials:has-credentials': (service: 'browserstack' | 'jira' | 'azure') => Promise<boolean>;
+  'credentials:save': (credentials: any) => Promise<{ success: boolean; error?: string }>;
+  'credentials:clear': () => Promise<{ success: boolean; error?: string }>;
+
   // Azure DevOps
   'azure:parse-repo-url': (url: string) => Promise<any>;
   'azure:test-connection': () => Promise<boolean>;

@@ -168,6 +168,26 @@ export const ipc = {
     },
   },
 
+  // Credentials
+  credentials: {
+    getMasked: (): Promise<Record<string, { value: string; masked: string; exists: boolean }>> => {
+      const backend = getBackend();
+      return backend?.['credentials:get-masked']() || Promise.resolve({});
+    },
+    hasCredentials: (service: 'browserstack' | 'jira' | 'azure'): Promise<boolean> => {
+      const backend = getBackend();
+      return backend?.['credentials:has-credentials'](service) || Promise.resolve(false);
+    },
+    save: (credentials: any): Promise<{ success: boolean; error?: string }> => {
+      const backend = getBackend();
+      return backend?.['credentials:save'](credentials) || Promise.resolve({ success: false, error: 'Backend not available' });
+    },
+    clear: (): Promise<{ success: boolean; error?: string }> => {
+      const backend = getBackend();
+      return backend?.['credentials:clear']() || Promise.resolve({ success: false, error: 'Backend not available' });
+    },
+  },
+
   // Azure DevOps
   azure: {
     parseRepoUrl: (url: string): Promise<any> => {
