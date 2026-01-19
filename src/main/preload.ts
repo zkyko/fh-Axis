@@ -29,6 +29,8 @@ contextBridge.exposeInMainWorld('electronAPI', {
   'jira:get-issue': (issueKey: string) => ipcRenderer.invoke('jira:get-issue', issueKey),
   'jira:search-issues': (jql: string) => ipcRenderer.invoke('jira:search-issues', jql),
   'jira:link-test-result': (issueKey: string, testResultId: string) => ipcRenderer.invoke('jira:link-test-result', issueKey, testResultId),
+  'jira:prepare-bug-draft': (args: { failureInput: { type: 'build' | 'session' | 'tm'; id: string; projectId?: string }; preferredSessionId?: string }) => ipcRenderer.invoke('jira:prepare-bug-draft', args),
+  'jira:create-issue-from-draft': (args: { draft: { summary: string; description: string; labels: string[] }; fields?: { projectKey: string; issueType?: string; priority?: string; assignee?: string; component?: string } }) => ipcRenderer.invoke('jira:create-issue-from-draft', args),
 
   // Correlation
   'correlation:correlate': (testResultId: string) => ipcRenderer.invoke('correlation:correlate', testResultId),
