@@ -322,7 +322,7 @@ const RepoCompanionScreen: React.FC = () => {
       if (result.success) {
         setOperationStatus({ 
           ...operationStatus, 
-          pull: { loading: false, message: 'Pulled successfully!' } 
+          pull: { loading: false, message: result.message || 'Pulled successfully!' } 
         });
         const status = await ipc.repo.gitStatus(localRepoPath);
         setGitStatus(status);
@@ -333,9 +333,13 @@ const RepoCompanionScreen: React.FC = () => {
           setOperationStatus({ ...operationStatus, pull: { loading: false } });
         }, 3000);
       } else {
+        let errorMessage = result.error || 'Pull failed';
+        if (result.needsMerge) {
+          errorMessage += '\n\nTip: Try using the Sync button instead.';
+        }
         setOperationStatus({ 
           ...operationStatus, 
-          pull: { loading: false, error: result.error || 'Pull failed' } 
+          pull: { loading: false, error: errorMessage } 
         });
       }
     } catch (err: any) {
@@ -363,9 +367,13 @@ const RepoCompanionScreen: React.FC = () => {
       const result = await ipc.repo.push(localRepoPath, gitStatus.branch);
       
       if (result.success) {
+        let message = result.message || 'Pushed successfully!';
+        if (result.warnings && result.warnings.length > 0) {
+          message += '\n\nWarnings:\n' + result.warnings.join('\n');
+        }
         setOperationStatus({ 
           ...operationStatus, 
-          push: { loading: false, message: 'Pushed successfully!' } 
+          push: { loading: false, message } 
         });
         const status = await ipc.repo.gitStatus(localRepoPath);
         setGitStatus(status);
@@ -373,15 +381,72 @@ const RepoCompanionScreen: React.FC = () => {
           setOperationStatus({ ...operationStatus, push: { loading: false } });
         }, 3000);
       } else {
+        let errorMessage = result.error || 'Push failed';
+        if (result.needsPull) {
+          errorMessage += '\n\nTip: Pull or Sync first, then push again.';
+        } else if (result.authError) {
+          errorMessage += '\n\nCheck your credentials in Settings.';
+        } else if (result.isProtectedBranch) {
+          errorMessage += '\n\nCreate a feature branch first.';
+        }
         setOperationStatus({ 
           ...operationStatus, 
-          push: { loading: false, error: result.error || 'Push failed' } 
+          push: { loading: false, error: errorMessage } 
         });
       }
     } catch (err: any) {
       setOperationStatus({ 
         ...operationStatus, 
         push: { loading: false, error: err.message || 'Push failed' } 
+      });
+    }
+  };
+
+  const handleSync = async () => {
+    if (!localRepoPath) {
+      alert('Repository not cloned locally. Please clone it first.');
+      return;
+    }
+
+    setOperationStatus({ ...operationStatus, sync: { loading: true } });
+
+    try {
+      const result = await ipc.repo.sync(localRepoPath);
+      
+      if (result.success) {
+        let message = result.message || 'Synced successfully!';
+        if (result.results) {
+          message += `\n\n• ${result.results.fetch.message}\n• ${result.results.pull.message}\n• ${result.results.push.message}`;
+        }
+        setOperationStatus({ 
+          ...operationStatus, 
+          sync: { loading: false, message } 
+        });
+        const status = await ipc.repo.gitStatus(localRepoPath);
+        setGitStatus(status);
+        if (selectedRepo) {
+          loadCommits(selectedRepo.id, selectedRepo.defaultBranch);
+        }
+        setTimeout(() => {
+          setOperationStatus({ ...operationStatus, sync: { loading: false } });
+        }, 3000);
+      } else {
+        let errorMessage = result.error || 'Sync failed';
+        if (result.results) {
+          errorMessage += '\n\nStatus:';
+          errorMessage += `\n• Fetch: ${result.results.fetch.success ? '✓' : '✗'} ${result.results.fetch.message}`;
+          errorMessage += `\n• Pull: ${result.results.pull.success ? '✓' : '✗'} ${result.results.pull.message}`;
+          errorMessage += `\n• Push: ${result.results.push.success ? '✓' : '✗'} ${result.results.push.message}`;
+        }
+        setOperationStatus({ 
+          ...operationStatus, 
+          sync: { loading: false, error: errorMessage } 
+        });
+      }
+    } catch (err: any) {
+      setOperationStatus({ 
+        ...operationStatus, 
+        sync: { loading: false, error: err.message || 'Sync failed' } 
       });
     }
   };
@@ -675,7 +740,7 @@ const RepoCompanionScreen: React.FC = () => {
                   {operationStatus.pull?.loading ? (
                     <Loader className="w-4 h-4 animate-spin" />
                   ) : (
-                    <RefreshCw size={16} />
+                    <Download size={16} />
                   )}
                   Pull
                 </button>
@@ -690,6 +755,19 @@ const RepoCompanionScreen: React.FC = () => {
                     <Upload size={16} />
                   )}
                   Push
+                </button>
+                <button
+                  className="btn btn-sm btn-accent"
+                  onClick={handleSync}
+                  disabled={operationStatus.sync?.loading}
+                  title="Fetch, Pull, and Push in one operation"
+                >
+                  {operationStatus.sync?.loading ? (
+                    <Loader className="w-4 h-4 animate-spin" />
+                  ) : (
+                    <RefreshCw size={16} />
+                  )}
+                  Sync
                 </button>
                 <button
                   className="btn btn-sm btn-ghost"
@@ -712,16 +790,16 @@ const RepoCompanionScreen: React.FC = () => {
               </div>
 
               {/* Status Messages */}
-              {(operationStatus.pull?.message || operationStatus.push?.message) && (
+              {(operationStatus.pull?.message || operationStatus.push?.message || operationStatus.sync?.message) && (
                 <div className="alert alert-success py-2">
                   <CheckCircle size={16} />
-                  <span className="text-sm">{operationStatus.pull?.message || operationStatus.push?.message}</span>
+                  <span className="text-sm whitespace-pre-line">{operationStatus.pull?.message || operationStatus.push?.message || operationStatus.sync?.message}</span>
                 </div>
               )}
-              {(operationStatus.pull?.error || operationStatus.push?.error) && (
+              {(operationStatus.pull?.error || operationStatus.push?.error || operationStatus.sync?.error) && (
                 <div className="alert alert-error py-2">
                   <XCircle size={16} />
-                  <span className="text-sm">{operationStatus.pull?.error || operationStatus.push?.error}</span>
+                  <span className="text-sm whitespace-pre-line">{operationStatus.pull?.error || operationStatus.push?.error || operationStatus.sync?.error}</span>
                 </div>
               )}
 
@@ -733,10 +811,22 @@ const RepoCompanionScreen: React.FC = () => {
                       <GitBranch size={16} className="text-primary" />
                       <span className="font-mono font-semibold">{gitStatus.branch || branches.current}</span>
                       {gitStatus.ahead > 0 && (
-                        <span className="badge badge-info badge-sm">{gitStatus.ahead} ahead</span>
+                        <span className="badge badge-success badge-sm flex items-center gap-1">
+                          <Upload size={10} />
+                          {gitStatus.ahead} ahead
+                        </span>
                       )}
                       {gitStatus.behind > 0 && (
-                        <span className="badge badge-warning badge-sm">{gitStatus.behind} behind</span>
+                        <span className="badge badge-warning badge-sm flex items-center gap-1">
+                          <Download size={10} />
+                          {gitStatus.behind} behind
+                        </span>
+                      )}
+                      {gitStatus.ahead === 0 && gitStatus.behind === 0 && (
+                        <span className="badge badge-sm badge-ghost">
+                          <CheckCircle size={10} />
+                          up to date
+                        </span>
                       )}
                     </div>
                     <button

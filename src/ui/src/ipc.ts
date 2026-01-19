@@ -218,13 +218,17 @@ export const ipc = {
       const backend = getBackend();
       return backend?.['repo:clone'](repoUrl, targetDir, repoName, repoId) || Promise.resolve({ success: false, error: 'Backend not available' });
     },
-    pull: (repoRoot: string): Promise<{ success: boolean; message?: string; error?: string; output?: string; stderr?: string }> => {
+    pull: (repoRoot: string): Promise<{ success: boolean; message?: string; error?: string; output?: string; stderr?: string; alreadyUpToDate?: boolean; needsMerge?: boolean; behindCount?: number }> => {
       const backend = getBackend();
       return backend?.['repo:pull'](repoRoot) || Promise.resolve({ success: false, error: 'Backend not available' });
     },
-    push: (repoRoot: string, branch?: string, commitContext?: any): Promise<{ success: boolean; message?: string; error?: string; output?: string; stderr?: string; warnings?: string[] }> => {
+    push: (repoRoot: string, branch?: string, commitContext?: any): Promise<{ success: boolean; message?: string; error?: string; output?: string; stderr?: string; warnings?: string[]; isProtectedBranch?: boolean; needsPull?: boolean; authError?: boolean; newBranch?: boolean; errors?: string[] }> => {
       const backend = getBackend();
       return backend?.['repo:push'](repoRoot, branch, commitContext) || Promise.resolve({ success: false, error: 'Backend not available' });
+    },
+    sync: (repoRoot: string): Promise<{ success: boolean; message?: string; error?: string; results?: { fetch: { success: boolean; message: string }; pull: { success: boolean; message: string }; push: { success: boolean; message: string } } }> => {
+      const backend = getBackend();
+      return backend?.['repo:sync'](repoRoot) || Promise.resolve({ success: false, error: 'Backend not available' });
     },
     selectDirectory: (): Promise<string | null> => {
       const backend = getBackend();
