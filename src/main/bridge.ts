@@ -15,6 +15,7 @@ import { buildFailureContext } from './services/failure-context-builder';
 import { renderDraft } from './services/jira-template-renderer';
 import { UpdaterService, UpdaterEvent } from './services/updater';
 import { FailureContext, FailureContextInput, JiraDraft } from './types';
+import { CredentialsService, Credentials } from './services/credentials-service';
 import { 
   isProtectedBranch, 
   validateBranchName, 
@@ -38,10 +39,8 @@ let storage: StorageService | null = null;
 let correlationEngine: CorrelationEngine | null = null;
 const settingsStore = new Store();
 
-const envStr = (key: string): string => {
-  const v = process.env[key];
-  return typeof v === 'string' ? v.trim() : '';
-};
+// Replace the old envStr helper with credentialsService
+const credentialsService = new CredentialsService();
 
 let automateService: BrowserStackAutomateService | null = null;
 let tmService: BrowserStackTMService | null = null;
@@ -75,7 +74,7 @@ function getCorrelationEngine(): CorrelationEngine {
   return correlationEngine;
 }
 
-// Initialize services from `.env` (source of truth for credentials)
+// Initialize services from credentials service (with .env fallback for development)
 function initializeServices() {
   // Stop any long-running background work tied to old credentials.
   if (runPoller) {
@@ -93,30 +92,27 @@ function initializeServices() {
   azureService = null;
   azurePipelinesService = null;
   
+  // Get credentials from electron-store (with .env fallback for dev)
+  const creds = credentialsService.getCredentialsWithEnvFallback();
+  
   // BrowserStack (used for both Automate + TM)
-  const bsUsername = envStr('AXIS_BROWSERSTACK_USERNAME');
-  const bsAccessKey = envStr('AXIS_BROWSERSTACK_ACCESS_KEY');
-  if (bsUsername && bsAccessKey) {
-    automateService = new BrowserStackAutomateService(bsUsername, bsAccessKey);
+  if (creds.browserstackUsername && creds.browserstackAccessKey) {
+    automateService = new BrowserStackAutomateService(creds.browserstackUsername, creds.browserstackAccessKey);
     engine.setAutomateService(automateService);
-    tmService = new BrowserStackTMService(bsUsername, bsAccessKey);
+    tmService = new BrowserStackTMService(creds.browserstackUsername, creds.browserstackAccessKey);
     engine.setTMService(tmService);
   }
 
-  const jiraBaseUrl = envStr('AXIS_JIRA_BASE_URL');
-  const jiraEmail = envStr('AXIS_JIRA_EMAIL');
-  const jiraApiToken = envStr('AXIS_JIRA_API_TOKEN');
-  if (jiraBaseUrl && jiraEmail && jiraApiToken) {
-    jiraService = new JiraService(jiraBaseUrl, jiraEmail, jiraApiToken);
+  // Jira
+  if (creds.jiraBaseUrl && creds.jiraEmail && creds.jiraApiToken) {
+    jiraService = new JiraService(creds.jiraBaseUrl, creds.jiraEmail, creds.jiraApiToken);
     engine.setJiraService(jiraService);
   }
 
-  const azureOrg = envStr('AXIS_AZURE_ORG');
-  const azureProject = envStr('AXIS_AZURE_PROJECT');
-  const azurePat = envStr('AXIS_AZURE_PAT');
-  if (azureOrg && azureProject && azurePat) {
-    azureService = new AzureDevOpsService(azureOrg, azureProject, azurePat);
-    azurePipelinesService = new AzurePipelinesService(azureOrg, azureProject, azurePat);
+  // Azure DevOps
+  if (creds.azureOrg && creds.azureProject && creds.azurePat) {
+    azureService = new AzureDevOpsService(creds.azureOrg, creds.azureProject, creds.azurePat);
+    azurePipelinesService = new AzurePipelinesService(creds.azureOrg, creds.azureProject, creds.azurePat);
     engine.setAzureService(azureService);
     
     // Initialize and start run poller
@@ -496,11 +492,10 @@ ipcMain.handle('settings:set', async (_, key: string, value: any) => {
 });
 
 ipcMain.handle('settings:test-bs-automate', async () => {
-  const username = envStr('AXIS_BROWSERSTACK_USERNAME');
-  const accessKey = envStr('AXIS_BROWSERSTACK_ACCESS_KEY');
-  if (!username || !accessKey) return false;
+  const creds = credentialsService.getCredentialsWithEnvFallback();
+  if (!creds.browserstackUsername || !creds.browserstackAccessKey) return false;
   try {
-    const service = new BrowserStackAutomateService(username, accessKey);
+    const service = new BrowserStackAutomateService(creds.browserstackUsername, creds.browserstackAccessKey);
     const projects = await service.getProjects();
     return projects.length >= 0; // Even empty array means connection works
   } catch {
@@ -509,11 +504,10 @@ ipcMain.handle('settings:test-bs-automate', async () => {
 });
 
 ipcMain.handle('settings:test-bs-tm', async () => {
-  const username = envStr('AXIS_BROWSERSTACK_USERNAME');
-  const accessKey = envStr('AXIS_BROWSERSTACK_ACCESS_KEY');
-  if (!username || !accessKey) return false;
+  const creds = credentialsService.getCredentialsWithEnvFallback();
+  if (!creds.browserstackUsername || !creds.browserstackAccessKey) return false;
   try {
-    const service = new BrowserStackTMService(username, accessKey);
+    const service = new BrowserStackTMService(creds.browserstackUsername, creds.browserstackAccessKey);
     const projects = await service.getProjects();
     return projects.length >= 0;
   } catch {
@@ -522,12 +516,10 @@ ipcMain.handle('settings:test-bs-tm', async () => {
 });
 
 ipcMain.handle('settings:test-jira', async () => {
-  const baseUrl = envStr('AXIS_JIRA_BASE_URL');
-  const email = envStr('AXIS_JIRA_EMAIL');
-  const apiToken = envStr('AXIS_JIRA_API_TOKEN');
-  if (!baseUrl || !email || !apiToken) return false;
+  const creds = credentialsService.getCredentialsWithEnvFallback();
+  if (!creds.jiraBaseUrl || !creds.jiraEmail || !creds.jiraApiToken) return false;
   try {
-    const service = new JiraService(baseUrl, email, apiToken);
+    const service = new JiraService(creds.jiraBaseUrl, creds.jiraEmail, creds.jiraApiToken);
     return await service.testConnection();
   } catch {
     return false;
@@ -535,15 +527,46 @@ ipcMain.handle('settings:test-jira', async () => {
 });
 
 ipcMain.handle('settings:test-azure', async () => {
-  const org = envStr('AXIS_AZURE_ORG');
-  const project = envStr('AXIS_AZURE_PROJECT');
-  const pat = envStr('AXIS_AZURE_PAT');
-  if (!org || !project || !pat) return false;
+  const creds = credentialsService.getCredentialsWithEnvFallback();
+  if (!creds.azureOrg || !creds.azureProject || !creds.azurePat) return false;
   try {
-    const service = new AzureDevOpsService(org, project, pat);
+    const service = new AzureDevOpsService(creds.azureOrg, creds.azureProject, creds.azurePat);
     return await service.testConnection();
   } catch {
     return false;
+  }
+});
+
+// Credentials IPC handlers
+ipcMain.handle('credentials:get-masked', async () => {
+  return credentialsService.getMaskedCredentials();
+});
+
+ipcMain.handle('credentials:has-credentials', async (_, service: 'browserstack' | 'jira' | 'azure') => {
+  return credentialsService.hasCredentials(service);
+});
+
+ipcMain.handle('credentials:save', async (_, credentials: Partial<Credentials>) => {
+  try {
+    credentialsService.saveCredentials(credentials);
+    // Reinitialize services with new credentials
+    initializeServices();
+    return { success: true };
+  } catch (error: any) {
+    console.error('Failed to save credentials:', error);
+    return { success: false, error: error.message };
+  }
+});
+
+ipcMain.handle('credentials:clear', async () => {
+  try {
+    credentialsService.clearCredentials();
+    // Reinitialize services (will have no credentials)
+    initializeServices();
+    return { success: true };
+  } catch (error: any) {
+    console.error('Failed to clear credentials:', error);
+    return { success: false, error: error.message };
   }
 });
 
@@ -656,10 +679,12 @@ ipcMain.handle('repo:create-template', async (_, repoRoot: string, templateId: s
 // Git operations
 ipcMain.handle('repo:clone', async (_, repoUrl: string, targetDir?: string, repoName?: string, repoId?: string) => {
   try {
-    // Azure PAT comes from `.env`
-    const pat = envStr('AXIS_AZURE_PAT');
+    // Azure PAT comes from credentials service
+    const creds = credentialsService.getCredentialsWithEnvFallback();
+    const pat = creds.azurePat;
+    
     if (!pat) {
-      throw new Error('Azure Personal Access Token not configured. Please set AXIS_AZURE_PAT in your .env.');
+      throw new Error('Azure Personal Access Token not configured. Please configure it in Settings.');
     }
 
     // Build authenticated URL: https://PAT@dev.azure.com/org/project/_git/repo

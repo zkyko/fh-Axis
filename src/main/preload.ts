@@ -47,6 +47,12 @@ contextBridge.exposeInMainWorld('electronAPI', {
   'settings:test-jira': () => ipcRenderer.invoke('settings:test-jira'),
   'settings:test-azure': () => ipcRenderer.invoke('settings:test-azure'),
 
+  // Credentials
+  'credentials:get-masked': () => ipcRenderer.invoke('credentials:get-masked'),
+  'credentials:has-credentials': (service: 'browserstack' | 'jira' | 'azure') => ipcRenderer.invoke('credentials:has-credentials', service),
+  'credentials:save': (credentials: Partial<Record<string, string | undefined>>) => ipcRenderer.invoke('credentials:save', credentials),
+  'credentials:clear': () => ipcRenderer.invoke('credentials:clear'),
+
   // Azure DevOps
   'azure:parse-repo-url': (url: string) => ipcRenderer.invoke('azure:parse-repo-url', url),
   'azure:test-connection': () => ipcRenderer.invoke('azure:test-connection'),
