@@ -822,12 +822,15 @@ const RepoCompanionScreen: React.FC = () => {
                           {gitStatus.behind} behind
                         </span>
                       )}
-                      {gitStatus.ahead === 0 && gitStatus.behind === 0 && (
-                        <span className="badge badge-sm badge-ghost">
-                          <CheckCircle size={10} />
-                          up to date
-                        </span>
-                      )}
+                      {(() => {
+                        const isUpToDate = gitStatus.ahead === 0 && gitStatus.behind === 0;
+                        return isUpToDate && (
+                          <span className="badge badge-sm badge-ghost">
+                            <CheckCircle size={10} />
+                            up to date
+                          </span>
+                        );
+                      })()}
                     </div>
                     <button
                       className="btn btn-xs btn-primary"

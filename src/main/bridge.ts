@@ -33,6 +33,17 @@ import { PomIntrospectionService } from './services/pom-introspection';
 
 const execAsync = promisify(exec);
 
+// Utility function to parse git status for ahead/behind counts
+function parseGitStatus(statusOutput: string): { ahead: number; behind: number } {
+  const behindMatch = statusOutput.match(/\[(?:ahead \d+, )?behind (\d+)\]/);
+  const aheadMatch = statusOutput.match(/\[ahead (\d+)/);
+  return {
+    behind: behindMatch ? parseInt(behindMatch[1]) : 0,
+    ahead: aheadMatch ? parseInt(aheadMatch[1]) : 0,
+  };
+}
+
+
 // Initialize services (lazy initialization - don't create StorageService until app is ready)
 let storage: StorageService | null = null;
 let correlationEngine: CorrelationEngine | null = null;
@@ -726,8 +737,7 @@ ipcMain.handle('repo:pull', async (_, repoRoot: string) => {
 
     // Check if pull will cause conflicts
     const { stdout: statusOut } = await execAsync('git status --porcelain --branch', { cwd: repoRoot });
-    const behindMatch = statusOut.match(/\[(?:ahead \d+, )?behind (\d+)\]/);
-    const behindCount = behindMatch ? parseInt(behindMatch[1]) : 0;
+    const { behind: behindCount } = parseGitStatus(statusOut);
 
     if (behindCount === 0) {
       return { success: true, message: 'Already up to date', output: '', alreadyUpToDate: true };
@@ -865,10 +875,7 @@ ipcMain.handle('repo:sync', async (_, repoRoot: string) => {
 
     // Step 2: Pull (if behind)
     const { stdout: statusOut } = await execAsync('git status --porcelain --branch', { cwd: repoRoot });
-    const behindMatch = statusOut.match(/\[(?:ahead \d+, )?behind (\d+)\]/);
-    const aheadMatch = statusOut.match(/\[ahead (\d+)/);
-    const behindCount = behindMatch ? parseInt(behindMatch[1]) : 0;
-    const aheadCount = aheadMatch ? parseInt(aheadMatch[1]) : 0;
+    const { ahead: aheadCount, behind: behindCount } = parseGitStatus(statusOut);
 
     if (behindCount > 0) {
       try {
