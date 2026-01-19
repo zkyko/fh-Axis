@@ -56,7 +56,6 @@ const Sidebar: React.FC = () => {
       {/* Logo Section */}
       <div className="p-4 border-b border-base-300">
         <div className="flex items-center gap-2">
-          <span className="text-2xl">🎯</span>
           <span className="font-semibold text-lg text-base-content">QA Hub</span>
         </div>
       </div>

@@ -2,7 +2,7 @@
   "appId": "com.fourhands.qahub",
   "productName": "QA Hub",
   "directories": {
-    "output": "release"
+    "output": "E:/fh-Axis-release"
   },
   "files": [
     "dist/**/*",
