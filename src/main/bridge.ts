@@ -34,6 +34,17 @@ import { PomIntrospectionService } from './services/pom-introspection';
 
 const execAsync = promisify(exec);
 
+// Utility function to parse git status for ahead/behind counts
+function parseGitStatus(statusOutput: string): { ahead: number; behind: number } {
+  const behindMatch = statusOutput.match(/\[(?:ahead \d+, )?behind (\d+)\]/);
+  const aheadMatch = statusOutput.match(/\[ahead (\d+)/);
+  return {
+    behind: behindMatch ? parseInt(behindMatch[1]) : 0,
+    ahead: aheadMatch ? parseInt(aheadMatch[1]) : 0,
+  };
+}
+
+
 // Initialize services (lazy initialization - don't create StorageService until app is ready)
 let storage: StorageService | null = null;
 let correlationEngine: CorrelationEngine | null = null;
@@ -743,12 +754,39 @@ ipcMain.handle('repo:pull', async (_, repoRoot: string) => {
       throw new Error('Not a git repository');
     }
 
-    const { stdout, stderr } = await execAsync('git pull', { 
+    // Fetch first to get latest remote state
+    await execAsync('git fetch origin', { 
       cwd: repoRoot,
       maxBuffer: 10 * 1024 * 1024,
     });
 
-    return { success: true, message: 'Pulled successfully', output: stdout };
+    // Check if pull will cause conflicts
+    const { stdout: statusOut } = await execAsync('git status --porcelain --branch', { cwd: repoRoot });
+    const { behind: behindCount } = parseGitStatus(statusOut);
+
+    if (behindCount === 0) {
+      return { success: true, message: 'Already up to date', output: '', alreadyUpToDate: true };
+    }
+
+    // Try fast-forward only pull first (safest)
+    try {
+      const { stdout } = await execAsync('git pull --ff-only', { 
+        cwd: repoRoot,
+        maxBuffer: 10 * 1024 * 1024,
+      });
+      return { success: true, message: `Pulled ${behindCount} commit(s) successfully`, output: stdout };
+    } catch (ffError: any) {
+      // Fast-forward failed - need merge/rebase
+      if (ffError.message.includes('Not possible to fast-forward')) {
+        return { 
+          success: false, 
+          error: 'Cannot fast-forward - you have local commits. Use "Sync" to merge or rebase.',
+          needsMerge: true,
+          behindCount
+        };
+      }
+      throw ffError;
+    }
   } catch (error: any) {
     console.error('Failed to pull:', error);
     return { 
@@ -765,86 +803,150 @@ ipcMain.handle('repo:push', async (_, repoRoot: string, branch?: string, commitC
       throw new Error('Not a git repository');
     }
 
-    // Get current branch if not specified
+    // Get current branch
     let currentBranch = branch;
     if (!currentBranch) {
-      try {
-        const { stdout: branchOut } = await execAsync('git branch --show-current', { cwd: repoRoot });
-        currentBranch = branchOut.trim();
-      } catch (e) {
-        currentBranch = 'HEAD';
-      }
+      const { stdout: branchOut } = await execAsync('git branch --show-current', { cwd: repoRoot });
+      currentBranch = branchOut.trim();
     }
 
-    // Run pre-push safety checks
+    // Safety check: protected branches
+    if (isProtectedBranch(currentBranch || 'HEAD')) {
+      return { 
+        success: false, 
+        error: `🚫 Cannot push to protected branch "${currentBranch}". Create a feature branch with 'qa/' prefix first.`,
+        isProtectedBranch: true
+      };
+    }
+
+    // Run pre-push checks (your existing validation)
     const prePushCheck = await runPrePushChecks(repoRoot, currentBranch || 'HEAD', commitContext);
     
     if (!prePushCheck.canPush) {
       return { 
         success: false, 
-        error: prePushCheck.errors.join('; '),
+        error: prePushCheck.errors.join('\n'),
         errors: prePushCheck.errors,
         warnings: prePushCheck.warnings
       };
     }
 
-    // Show warnings but don't block
-    if (prePushCheck.warnings.length > 0) {
-      console.warn('Pre-push warnings:', prePushCheck.warnings);
-    }
-
-    // Detect whether this branch has an upstream. New local branches often don't,
-    // and "ahead" won't show up even though the branch hasn't been published yet.
-    let hasUpstream = true;
+    // Simple push with upstream tracking
+    // This handles both new and existing branches
     try {
-      await execAsync('git rev-parse --abbrev-ref --symbolic-full-name @{u}', { cwd: repoRoot });
-    } catch {
-      hasUpstream = false;
-    }
-
-    // Check if there are commits to push (only meaningful when upstream exists)
-    let aheadCount = 0;
-    if (hasUpstream) {
-      const { stdout: statusOut } = await execAsync('git status --porcelain --branch', { cwd: repoRoot });
-      const aheadMatch = statusOut.match(/\[ahead (\d+)\]/);
-      aheadCount = aheadMatch ? parseInt(aheadMatch[1]) : 0;
-    }
-
-    // If no upstream, push with -u to create the remote branch even if it's at the same commit as main.
-    if (!hasUpstream) {
       const { stdout } = await execAsync('git push -u origin HEAD', {
         cwd: repoRoot,
         maxBuffer: 10 * 1024 * 1024,
       });
-      return {
-        success: true,
-        message: 'Pushed branch and set upstream successfully',
+
+      // Parse success message
+      const newBranch = stdout.includes('new branch');
+      const message = newBranch 
+        ? `✓ Created remote branch "${currentBranch}" and pushed successfully`
+        : `✓ Pushed to "${currentBranch}" successfully`;
+
+      return { 
+        success: true, 
+        message,
         output: stdout,
         warnings: prePushCheck.warnings,
+        newBranch
       };
+    } catch (pushError: any) {
+      // Handle common push errors with helpful messages
+      if (pushError.message.includes('rejected')) {
+        return {
+          success: false,
+          error: '⚠️ Push rejected - remote has changes you don\'t have locally. Pull first, then push again.',
+          needsPull: true
+        };
+      }
+      
+      if (pushError.message.includes('Authentication failed')) {
+        return {
+          success: false,
+          error: '🔐 Authentication failed. Check your Azure PAT in Settings.',
+          authError: true
+        };
+      }
+
+      throw pushError;
     }
-
-    if (aheadCount === 0) {
-      return { success: false, error: 'Nothing to push. Your branch is up to date.' };
-    }
-
-    const branchToPush = branch || 'HEAD';
-    const { stdout, stderr } = await execAsync(`git push origin ${branchToPush}`, { 
-      cwd: repoRoot,
-      maxBuffer: 10 * 1024 * 1024,
-    });
-
-    return { 
-      success: true, 
-      message: `Pushed ${aheadCount} commit(s) successfully`, 
-      output: stdout,
-      warnings: prePushCheck.warnings
-    };
   } catch (error: any) {
     console.error('Failed to push:', error);
     return { 
       success: false, 
       error: error.message || 'Failed to push',
+      stderr: error.stderr || '',
+    };
+  }
+});
+
+ipcMain.handle('repo:sync', async (_, repoRoot: string) => {
+  try {
+    if (!fs.existsSync(path.join(repoRoot, '.git'))) {
+      throw new Error('Not a git repository');
+    }
+
+    const results = {
+      fetch: { success: false, message: '' },
+      pull: { success: false, message: '' },
+      push: { success: false, message: '' },
+    };
+
+    // Step 1: Fetch
+    await execAsync('git fetch origin', { cwd: repoRoot });
+    results.fetch = { success: true, message: 'Fetched latest changes' };
+
+    // Step 2: Pull (if behind)
+    const { stdout: statusOut } = await execAsync('git status --porcelain --branch', { cwd: repoRoot });
+    const { ahead: aheadCount, behind: behindCount } = parseGitStatus(statusOut);
+
+    if (behindCount > 0) {
+      try {
+        await execAsync('git pull --ff-only', { cwd: repoRoot, maxBuffer: 10 * 1024 * 1024 });
+        results.pull = { success: true, message: `Pulled ${behindCount} commit(s)` };
+      } catch (pullError: any) {
+        if (pullError.message.includes('Not possible to fast-forward')) {
+          return {
+            success: false,
+            error: 'Sync failed: Cannot fast-forward. You have diverged from remote. Please merge or rebase manually.',
+            results
+          };
+        }
+        throw pullError;
+      }
+    } else {
+      results.pull = { success: true, message: 'Already up to date' };
+    }
+
+    // Step 3: Push (if ahead)
+    if (aheadCount > 0) {
+      try {
+        await execAsync('git push -u origin HEAD', { cwd: repoRoot, maxBuffer: 10 * 1024 * 1024 });
+        results.push = { success: true, message: `Pushed ${aheadCount} commit(s)` };
+      } catch (pushError: any) {
+        // Push failed but fetch/pull succeeded
+        return {
+          success: false,
+          error: 'Sync partially completed: Fetched and pulled successfully, but push failed.',
+          results
+        };
+      }
+    } else {
+      results.push = { success: true, message: 'Nothing to push' };
+    }
+
+    return {
+      success: true,
+      message: '✓ Synced successfully',
+      results
+    };
+  } catch (error: any) {
+    console.error('Failed to sync:', error);
+    return {
+      success: false,
+      error: error.message || 'Failed to sync',
       stderr: error.stderr || '',
     };
   }
